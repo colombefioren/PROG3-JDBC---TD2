@@ -82,4 +82,8 @@ public class Ingredient {
                 ", dish=" + dish +
                 '}';
     }
+
+    public String getDishName(){
+        return this.dish.getName();
+    }
 }
