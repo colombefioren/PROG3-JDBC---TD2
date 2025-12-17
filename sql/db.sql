@@ -31,4 +31,4 @@ RESET ROLE;
 
 ALTER ROLE mini_dish_db_manager SET search_path = mini_dish_db_management;
 
-\c product_management_db product_manager_user
+\c mini_dish_db mini_dish_db_manager
