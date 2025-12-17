@@ -63,7 +63,7 @@ public class Dish {
         return Objects.hash(id, name, dishType, ingredients);
     }
 
-    public String showIngredients(){
+    public String showIngredientNames(){
         return ingredients.stream().map(Ingredient::getName).toList().toString();
     }
 
@@ -73,7 +73,7 @@ public class Dish {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", dishType=" + dishType +
-                ", ingredients=" + showIngredients() +
+                ", ingredients=" + showIngredientNames() +
                 '}';
     }
 
