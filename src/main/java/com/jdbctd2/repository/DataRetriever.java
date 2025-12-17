@@ -55,13 +55,33 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   public List<Ingredient> findIngredients(int page, int size) {
     String sql =
 """
-        select ingredient.id, ingredient.name, ingredient.price, ingredient.category, id_dish, dish.name, dish.dish_type
+        select ingredient.id, ingredient.name, ingredient.price, ingredient.category, ingredient.id_dish as dish_id
         from ingredient
-        left join dish ON dish.id = ingredient.id_dish
         order by ingredient.id
         limit ? offset ?
 """;
-    return List.of();
+
+    int offset = (page - 1) * size;
+    List<Ingredient> result = new ArrayList<>();
+    Dish dish = null;
+
+    try (Connection con = dbConnection.getDBConnection();
+        PreparedStatement ps = con.prepareStatement(sql)) {
+
+      ps.setInt(1, size);
+      ps.setInt(2, offset);
+
+      try (ResultSet rs = ps.executeQuery()) {
+        while (rs.next()) {
+          dish = findDishById(rs.getInt("dish_id"));
+          result.add(createIngredientFromResultSet(rs, dish));
+        }
+      }
+
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+    return result;
   }
 
   @Override
