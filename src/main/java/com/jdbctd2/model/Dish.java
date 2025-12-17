@@ -63,13 +63,17 @@ public class Dish {
         return Objects.hash(id, name, dishType, ingredients);
     }
 
+    public String showIngredients(){
+        return ingredients.stream().map(Ingredient::getName).toList().toString();
+    }
+
     @Override
     public String toString() {
         return "Dish{" +
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", dishType=" + dishType +
-                ", ingredients=" + ingredients +
+                ", ingredients=" + showIngredients() +
                 '}';
     }
 
