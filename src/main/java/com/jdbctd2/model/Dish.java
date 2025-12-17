@@ -77,7 +77,7 @@ public class Dish {
                 '}';
     }
 
-    public Double getDishPrice(){
+    public Double getDishCost(){
         return this.ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
     }
 }

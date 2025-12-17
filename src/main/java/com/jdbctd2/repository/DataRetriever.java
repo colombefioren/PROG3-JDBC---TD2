@@ -53,6 +53,7 @@ public class DataRetriever implements IngredientRepository, DishRepository{
 
     @Override
     public List<Ingredient> findIngredients(int page, int size) {
+        String
         return List.of();
     }
 
