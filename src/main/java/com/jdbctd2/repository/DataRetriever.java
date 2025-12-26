@@ -19,6 +19,66 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     this.dbConnection = new DBConnection();
   }
 
+  public void initializeDB() {
+    String clearTablesSql =
+"""
+truncate table Ingredient, Dish restart identity cascade
+""";
+
+    String insertDishSql =
+"""
+insert into Dish (name, dish_type) values
+        ('Salade fraîche', 'START'),
+        ('Poulet grillé', 'MAIN'),
+        ('Riz aux légumes', 'MAIN'),
+        ('Gâteau au chocolat', 'DESSERT'),
+        ('Salade de fruits', 'DESSERT')
+""";
+
+    String insertIngredientSql =
+"""
+insert into Ingredient (name, price, category, id_dish) values
+        ('Laitue', 800.00, 'VEGETABLE', 1),
+        ('Tomate', 600.00, 'VEGETABLE', 1),
+        ('Poulet', 4500.00, 'ANIMAL', 2),
+        ('Chocolat', 3000.00, 'OTHER', 4),
+        ('Beurre', 2500.00, 'DAIRY', 4)
+""";
+
+    Connection con = null;
+    Statement stmt = null;
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+
+      stmt = con.createStatement();
+
+      stmt.executeUpdate(clearTablesSql);
+      stmt.executeUpdate(insertDishSql);
+      stmt.executeUpdate(insertIngredientSql);
+
+      con.commit();
+    } catch (SQLException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+      throw new RuntimeException("Failed to initialize the data in db. " + "Error: " + e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.err.println("Could not reset auto-commit: " + e);
+      }
+      dbConnection.attemptCloseDBConnection(con, stmt);
+    }
+  }
+
   @Override
   public Dish findDishById(Integer id) {
     if (id == null || id <= 0) {
@@ -29,7 +89,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
                     select d.id as dish_id, d.name as dish_name, d.dish_type
                     from Dish d
                     where d.id = ?
-                    order by dish_id;
+                    order by dish_id
                    """;
 
     String ingredientSql =
@@ -37,7 +97,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
 from Ingredient i
 where i.id_dish = ?
-order by ing_id;
+order by ing_id
 """;
 
     Connection con = null;
@@ -103,7 +163,7 @@ update Dish d set name = ?, dish_type = ?::dish_type where d.id = ?
 
     String createDishSql =
 """
-insert into Dish (name, dish_type) values (?, ?::dish_type) returning id;
+insert into Dish (name, dish_type) values (?, ?::dish_type) returning id
 """;
 
     String dissociateSql =
@@ -243,8 +303,8 @@ update Ingredient set id_dish = ? where id = ?
       return dishes;
     } catch (SQLException e) {
       throw new RuntimeException(e);
-    }finally{
-      dbConnection.attemptCloseDBConnection(con,findIngRs, findIngSmt);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, findIngRs, findIngSmt);
     }
   }
 
@@ -255,7 +315,7 @@ update Ingredient set id_dish = ? where id = ?
 select i.id as ing_id, i.name as ing_name, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
 from ingredient i
 where lower(i.name) = lower(?)
-order by ing_id;
+order by ing_id
 """;
 
     Connection con = null;
@@ -273,8 +333,8 @@ order by ing_id;
       return mapResultSetToIngredient(findIngByNameRs);
     } catch (SQLException e) {
       throw new RuntimeException(e);
-    }finally{
-      dbConnection.attemptCloseDBConnection(con,findIngByNameStmt, findIngByNameRs);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, findIngByNameStmt, findIngByNameRs);
     }
   }
 
@@ -337,7 +397,7 @@ order by ing_id;
 
     String createIngSql =
 """
-insert into ingredient (name, price, category, id_dish) values (?, ?, ?::category, ?);
+insert into ingredient (name, price, category, id_dish) values (?, ?, ?::category, ?)
 """;
 
     String findIngSql =
@@ -463,8 +523,8 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
       return ingredients;
     } catch (SQLException e) {
       throw new RuntimeException(e);
-    }finally{
-      dbConnection.attemptCloseDBConnection(con,findIngRs, findIngStmt);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, findIngRs, findIngStmt);
     }
   }
 
