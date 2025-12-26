@@ -42,9 +42,13 @@ public class Main {
     System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
     Ingredient fromage = new Ingredient("Fromage", 1200.0, CategoryEnum.DAIRY);
     Ingredient oignon = new Ingredient("Oignon", 500.0, CategoryEnum.VEGETABLE);
-    List<Ingredient> createdIngredientsI =
-        dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(fromage, oignon)));
-    System.out.println("createdIngredients : " + createdIngredientsI);
+    try {
+      List<Ingredient> createdIngredientsI =
+          dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(fromage, oignon)));
+      System.out.println("createdIngredients : " + createdIngredientsI);
+    } catch (RuntimeException e) {
+      System.out.println("Error while creating ingredients : " + e);
+    }
 
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
@@ -57,5 +61,11 @@ public class Main {
     } catch (RuntimeException e) {
       System.out.println("Error while creating ingredients : " + e);
     }
+
+    // e) List<Ingredient> findDishesByIngredientName(String IngredientName) - eur
+    System.out.println(
+        "\n===> List<Ingredient> findDishesByIngredientName(String IngredientName) | eur <===");
+    List<Dish> dishesByIngredientNameE = dataRetriever.findDishesByIngredientName("eur");
+    System.out.println("dishesByIngredientName : " + dishesByIngredientNameE);
   }
 }
