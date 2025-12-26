@@ -121,7 +121,7 @@ update Ingredient set id_dish = ? where id = ?
     ResultSet findDishRs = null;
     PreparedStatement updateDishStmt = null;
     PreparedStatement createDishStmt = null;
-    ResultSet createDishRs = null;
+    ResultSet createDishRs;
     PreparedStatement dissociateStmt = null;
     PreparedStatement associateStmt = null;
 
@@ -192,7 +192,7 @@ update Ingredient set id_dish = ? where id = ?
       try {
         if (con != null && !con.isClosed()) {
           con.rollback();
-          System.out.println("An error occured so that transaction was rolled back");
+          System.out.println("An error occurred so that transaction was rolled back");
         }
       } catch (SQLException ex) {
         throw new RuntimeException(ex);
@@ -227,9 +227,9 @@ update Ingredient set id_dish = ? where id = ?
     where i.name ilike ?
 """;
 
-    Connection con = null;
-    PreparedStatement findIngSmt = null;
-    ResultSet findIngRs = null;
+    Connection con;
+    PreparedStatement findIngSmt;
+    ResultSet findIngRs;
 
     try {
       con = dbConnection.getDBConnection();
@@ -271,13 +271,7 @@ update Ingredient set id_dish = ? where id = ?
       ingredientRs = ingredientStmt.executeQuery();
       List<Ingredient> ingredients = new ArrayList<>();
       while (ingredientRs.next()) {
-        Ingredient ingredient = new Ingredient();
-        ingredient.setId(ingredientRs.getInt("ing_id"));
-        ingredient.setName(ingredientRs.getString("ing_name"));
-        ingredient.setPrice(ingredientRs.getDouble("ing_price"));
-        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("ing_category")));
-        ingredient.setDish(findDishById(ingredientRs.getInt("id_dish")));
-        ingredients.add(ingredient);
+        ingredients.add(mapResultSetToIngredient(ingredientRs));
       }
 
       return ingredients;
@@ -381,7 +375,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
       try {
         if (con != null && !con.isClosed()) {
           con.rollback();
-          System.out.println("An error occured so that transaction was rolled back");
+          System.out.println("An error occurred so that transaction was rolled back");
         }
       } catch (SQLException ex) {
         throw new RuntimeException(ex);
@@ -404,7 +398,74 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
   @Override
   public List<Ingredient> findIngredientsByCriteria(
       String ingredientName, CategoryEnum category, String dishName, int page, int size) {
-    return List.of();
+
+    if (page <= 0 || size <= 0) {
+      throw new IllegalArgumentException("Page and size must be valid values");
+    }
+
+    String findIngSql = getFindIngSql(ingredientName, category, dishName);
+
+    Connection con;
+    PreparedStatement findIngStmt;
+    ResultSet findIngRs;
+
+    try{
+     con = dbConnection.getDBConnection();
+     findIngStmt = con.prepareStatement(findIngSql);
+     if (ingredientName != null && !ingredientName.isBlank()) {
+       findIngStmt.setString(1, "%" + ingredientName + "%");
+     }
+     if (category != null) {
+       findIngStmt.setString(2, category.name());
+     }
+     if (dishName != null && !dishName.isBlank()) {
+       findIngStmt.setString(3, "%" + dishName + "%");
+     }
+     findIngStmt.setInt(4, size);
+     findIngStmt.setInt(5, (page - 1) * size);
+     findIngRs = findIngStmt.executeQuery();
+     List<Ingredient> ingredients = new ArrayList<>();
+     while (findIngRs.next()) {
+       ingredients.add(mapResultSetToIngredient(findIngRs));
+     }
+     return ingredients;
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+  }
+
+  private static String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
+    String findIngSql =
+"""
+select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish, d.name as dish_name
+from Ingredient i
+left join Dish d on i.id_dish = d.id
+""";
+    boolean hasWhere = false;
+    if (ingredientName != null && !ingredientName.isBlank()) {
+      findIngSql += "where i.name ilike ?";
+      hasWhere = true;
+    }
+    if (category != null) {
+      if (hasWhere) {
+        findIngSql += " and ";
+      } else {
+        findIngSql += " where ";
+      }
+      findIngSql += "i.category = ?::category";
+      hasWhere = true;
+    }
+    if (dishName != null && !dishName.isBlank()) {
+      if (hasWhere) {
+        findIngSql += " and ";
+      } else {
+        findIngSql += " where ";
+      }
+      findIngSql += "d.name ilike ?";
+    }
+
+    findIngSql += " limit ? offset ? order by ing_id";
+    return findIngSql;
   }
 
   private void isValid(Ingredient ingredient) {
@@ -429,5 +490,14 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
     if (dish.getId() <= 0) {
       throw new IllegalArgumentException("Dish id cannot be negative");
     }
+  }
+
+  private Ingredient mapResultSetToIngredient(ResultSet rs) throws SQLException {
+    Ingredient ingredient = new Ingredient();
+    ingredient.setId(rs.getInt("id"));
+    ingredient.setName(rs.getString("name"));
+    ingredient.setPrice(rs.getDouble("price"));
+    ingredient.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+    return ingredient;
   }
 }
