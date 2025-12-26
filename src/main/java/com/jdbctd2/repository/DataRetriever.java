@@ -219,7 +219,31 @@ update Ingredient set id_dish = ? where id = ?
 
   @Override
   public List<Dish> findDishesByIngredientName(String IngredientName) {
-    return List.of();
+    String findIngSql =
+"""
+    select d.id as dish_id, d.name as dish_name, d.dish_type, i.name as ing_name
+    from Dish d
+    join Ingredient i on d.id = i.id_dish
+    where i.name ilike ?
+""";
+
+    Connection con = null;
+    PreparedStatement findIngSmt = null;
+    ResultSet findIngRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findIngSmt = con.prepareStatement(findIngSql);
+      findIngSmt.setString(1, "%" + IngredientName + "%");
+      findIngRs = findIngSmt.executeQuery();
+      List<Dish> dishes = new ArrayList<>();
+      while (findIngRs.next()) {
+        dishes.add(findDishById(findIngRs.getInt("dish_id")));
+      }
+      return dishes;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
