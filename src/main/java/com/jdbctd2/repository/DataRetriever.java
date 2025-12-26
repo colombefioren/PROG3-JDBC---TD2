@@ -260,17 +260,17 @@ order by ing_id;
     PreparedStatement findIngByNameStmt;
     ResultSet findIngByNameRs;
 
-    try{
+    try {
       con = dbConnection.getDBConnection();
       findIngByNameStmt = con.prepareStatement(findIngByNameSql);
       findIngByNameStmt.setString(1, ingredientName);
       findIngByNameRs = findIngByNameStmt.executeQuery();
-      if(!findIngByNameRs.next()){
+      if (!findIngByNameRs.next()) {
         return null;
       }
       return mapResultSetToIngredient(findIngByNameRs);
     } catch (SQLException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 
