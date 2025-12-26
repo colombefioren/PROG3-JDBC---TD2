@@ -158,7 +158,7 @@ order by ing_id;
 
     String createIngSql =
 """
-insert into ingredient (name, price, category, id_dish) values (?, ?, ?, ?);
+insert into ingredient (name, price, category, id_dish) values (?, ?, ?::category, ?);
 """;
 
     String findIngSql =
