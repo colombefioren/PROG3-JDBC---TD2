@@ -14,6 +14,9 @@ public class Main {
   public static void main(String[] args) {
     DataRetriever dataRetriever = new DataRetriever();
 
+    // BeforeAll
+    dataRetriever.initializeDB();
+
     // a) Dish findDishById(Integer id) - id = 1
     System.out.println("===> Dish findDishById(Integer id) | id = 1 <===");
     Dish dishA = dataRetriever.findDishById(1);

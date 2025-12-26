@@ -504,17 +504,18 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
     try {
       con = dbConnection.getDBConnection();
       findIngStmt = con.prepareStatement(findIngSql);
+      int paramIndex = 1;
       if (ingredientName != null && !ingredientName.isBlank()) {
-        findIngStmt.setString(1, "%" + ingredientName + "%");
+        findIngStmt.setString(paramIndex++, "%" + ingredientName + "%");
       }
       if (category != null) {
-        findIngStmt.setString(2, category.name());
+        findIngStmt.setString(paramIndex++, category.name());
       }
       if (dishName != null && !dishName.isBlank()) {
-        findIngStmt.setString(3, "%" + dishName + "%");
+        findIngStmt.setString(paramIndex++, "%" + dishName + "%");
       }
-      findIngStmt.setInt(4, size);
-      findIngStmt.setInt(5, (page - 1) * size);
+      findIngStmt.setInt(paramIndex++, size);
+      findIngStmt.setInt(paramIndex++, (page - 1) * size);
       findIngRs = findIngStmt.executeQuery();
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
