@@ -596,6 +596,9 @@ left join Dish d on i.id_dish = d.id
     ingredient.setName(rs.getString("ing_name"));
     ingredient.setPrice(rs.getDouble("ing_price"));
     ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
+    if (rs.getInt("id_dish") > 0) {
+      ingredient.setDish(findDishById(rs.getInt("id_dish")));
+    }
     return ingredient;
   }
 }
