@@ -82,7 +82,7 @@ public class Ingredient {
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
     Ingredient that = (Ingredient) o;
-    return id == that.id
+    return Objects.equals(id, that.id)
         && Objects.equals(name, that.name)
         && Objects.equals(price, that.price)
         && category == that.category
