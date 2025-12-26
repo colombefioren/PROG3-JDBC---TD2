@@ -122,6 +122,7 @@ order by ing_id;
         ingredient.setPrice(ingredientRs.getDouble("ing_price"));
         ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("ing_category")));
         ingredient.setDish(findDishById(ingredientRs.getInt("id_dish")));
+        ingredients.add(ingredient);
       }
 
       return ingredients;
