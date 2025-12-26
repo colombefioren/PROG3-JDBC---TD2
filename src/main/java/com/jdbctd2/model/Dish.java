@@ -32,7 +32,7 @@ public class Dish {
   }
 
   public void setName(String name) {
-    if (name != null && !name.isBlank()) {
+    if (name == null || name.isBlank()) {
       throw new IllegalArgumentException("Dish name cannot be null or blank");
     }
     this.name = name;
