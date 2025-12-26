@@ -44,7 +44,6 @@ public class Dish {
 
   public void setDishType(DishTypeEnum dishType) {
     this.dishType = dishType;
-
   }
 
   public List<Ingredient> getIngredients() {
@@ -57,10 +56,6 @@ public class Dish {
 
   public Double getDishCost() {
     return this.ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
-  }
-
-  public String showIngredientNames() {
-    return ingredients.stream().map(Ingredient::getName).toList().toString();
   }
 
   @Override
@@ -89,7 +84,7 @@ public class Dish {
         + ", dishType="
         + dishType
         + ", ingredients="
-        + showIngredientNames()
+        + ingredients
         + '}';
   }
 }
