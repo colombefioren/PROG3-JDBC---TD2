@@ -3,6 +3,9 @@ package com.jdbctd2;
 import com.jdbctd2.model.Dish;
 import com.jdbctd2.model.Ingredient;
 import com.jdbctd2.repository.DataRetriever;
+
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
@@ -34,5 +37,10 @@ public class Main {
         "\n===> List<Ingredient> findIngredients(int page, int size) | page=3,size=5 <===");
     List<Ingredient> ingredientListD = dataRetriever.findIngredients(3, 5);
     System.out.println("page=2,size=2 : " + ingredientListD);
+
+    // i) List<Ingredient> createIngredient(...) - fromage and oignon
+    System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
+    Ingredient fromage = new Ingredient(name, )
+    List<Ingredient> createdIngredientsI = dataRetriever.createIngredients(new ArrayList<>())
   }
 }
