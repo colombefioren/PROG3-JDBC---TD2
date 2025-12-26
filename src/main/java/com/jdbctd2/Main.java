@@ -7,6 +7,7 @@ import com.jdbctd2.model.Ingredient;
 import com.jdbctd2.repository.DataRetriever;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class Main {
@@ -93,9 +94,41 @@ public class Main {
       System.out.println("Error while creating ingredients : " + e);
 
       // k) Dish saveDish(...) - soupe de légumes
-      System.out.println("\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
+      System.out.println(
+          "\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
       Ingredient oignonIngredient = dataRetriever.findIngredientByName("oignon");
-      Dish dishK = new Dish("Soupe de légumes", DishTypeEnum.START,oignonIngredient);
+      Dish newDishK =
+          new Dish(
+              "Soupe de légumes",
+              DishTypeEnum.START,
+              new ArrayList<>(Collections.singletonList(oignonIngredient)));
+      Dish savedDishK = dataRetriever.saveDish(newDishK);
+      System.out.println("savedDish : " + savedDishK);
+
+      // l) Dish saveDish(...) - salade fraîche
+      System.out.println(
+          "\n===> Dish saveDish(...) | id=1 name=Salade fraîche dishType=START ingredients=Oignon, Laitue, Tomate, Fromage <===");
+      Ingredient laitueIngredient = dataRetriever.findIngredientByName("laitue");
+      Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
+      Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
+      Dish newDishL =
+          new Dish(1,
+              "Salade fraîche",
+              DishTypeEnum.START,
+              new ArrayList<>(Arrays.asList(oignonIngredient, laitueIngredient, tomateIngredient, fromageIngredient)));
+      Dish savedDishL = dataRetriever.saveDish(newDishL);
+      System.out.println("savedDish : " + savedDishL);
+
+      // m) Dish saveDish(...) - Salade de fromage
+      System.out.println(
+          "\n===> Dish saveDish(...) | id=1 name=Salade de fromage dishType=START ingredients=Fromage <===");
+      Dish newDishM =
+          new Dish(1,
+              "Salade de fromage",
+              DishTypeEnum.START,
+              new ArrayList<>(Collections.singletonList(fromageIngredient)));
+      Dish savedDishM = dataRetriever.saveDish(newDishM);
+      System.out.println("savedDish : " + savedDishM);
     }
   }
 }
