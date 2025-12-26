@@ -33,7 +33,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 """
 select i.id, i.name, i.price, i.category
 from Ingredient i
-where i.id_dish = 1;
+where i.id_dish = ?;
 """;
 
     Connection con = null;
@@ -66,7 +66,6 @@ where i.id_dish = 1;
         ingredient.setName(ingredientRs.getString("name"));
         ingredient.setPrice(ingredientRs.getDouble("price"));
         ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("category")));
-        ingredient.setDish(dish);
         ingredients.add(ingredient);
       }
 
