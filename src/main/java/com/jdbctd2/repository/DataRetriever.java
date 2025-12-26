@@ -95,6 +95,9 @@ order by ing_id;
 
   @Override
   public List<Ingredient> findIngredients(int page, int size) {
+    if(page <= 0 || size <= 0) {
+      throw new IllegalArgumentException("Page and size must be valid values");
+    }
     String sql =
 """
         select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category, ingredient.id_dish as id_dish
@@ -231,7 +234,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
         throw new RuntimeException(ex);
       }
       throw new RuntimeException(
-          "Failed to create ingredients. All changes rolled back (atomicity). " + "Error: " + e);
+          "Failed to create ingredients so all changes rolled back. " + "Error: " + e);
     } finally {
       try {
         if (con != null && !con.isClosed()) {
