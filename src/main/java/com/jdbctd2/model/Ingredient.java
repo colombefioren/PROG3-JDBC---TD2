@@ -98,7 +98,7 @@ public class Ingredient {
         + ", category="
         + category
         + ", dish="
-        + dish
+        + getDishName()
         + '}';
   }
 }
