@@ -3,7 +3,7 @@ package com.jdbctd2.model;
 import java.util.Objects;
 
 public class Ingredient {
-  private int id;
+  private Integer id;
   private String name;
   private Double price;
   private CategoryEnum category;
@@ -25,7 +25,7 @@ public class Ingredient {
     this.category = category;
   }
 
-  public int getId() {
+  public Integer getId() {
     return id;
   }
 

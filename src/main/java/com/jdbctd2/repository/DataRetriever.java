@@ -85,7 +85,136 @@ order by ing_id;
 
   @Override
   public Dish saveDish(Dish dishToSave) {
-    return null;
+    if (dishToSave == null) {
+      throw new IllegalArgumentException("Dish to save cannot be null");
+    }
+
+    isValid(dishToSave);
+
+    String findDishSql =
+        """
+  select id from Dish d where d.id = ?
+  """;
+
+    String updateDishSql =
+"""
+update Dish d set name = ?, dish_type = ?::dish_type where d.id = ?
+""";
+
+    String createDishSql =
+"""
+insert into Dish (name, dish_type) values (?, ?::dish_type) returning id;
+""";
+
+    String dissociateSql =
+"""
+update Ingredient set id_dish = null where id_dish = ?
+""";
+
+    String associateSql =
+"""
+update Ingredient set id_dish = ? where id = ?
+""";
+
+    Connection con = null;
+    PreparedStatement findDishStmt = null;
+    ResultSet findDishRs = null;
+    PreparedStatement updateDishStmt = null;
+    PreparedStatement createDishStmt = null;
+    ResultSet createDishRs = null;
+    PreparedStatement dissociateStmt = null;
+    PreparedStatement associateStmt = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      Integer savedDishId = null;
+      boolean isUpdate = false;
+
+      if (dishToSave.getId() != null) {
+        findDishStmt = con.prepareStatement(findDishSql);
+        findDishStmt.setInt(1, dishToSave.getId());
+        findDishRs = findDishStmt.executeQuery();
+        if (findDishRs.next()) {
+          savedDishId = findDishRs.getInt("dish_id");
+          isUpdate = true;
+        }
+      }
+
+      if (isUpdate) {
+        updateDishStmt = con.prepareStatement(updateDishSql);
+        updateDishStmt.setString(1, dishToSave.getName());
+        updateDishStmt.setString(2, dishToSave.getDishType().name());
+        updateDishStmt.setInt(3, dishToSave.getId());
+        int rowsUpdated = updateDishStmt.executeUpdate();
+        if (rowsUpdated == 0) {
+          throw new RuntimeException("Error while updating dish with id " + dishToSave.getId());
+        }
+      } else {
+        createDishStmt = con.prepareStatement(createDishSql, Statement.RETURN_GENERATED_KEYS);
+        createDishStmt.setString(1, dishToSave.getName());
+        createDishStmt.setString(2, dishToSave.getDishType().name());
+        createDishStmt.executeUpdate();
+        createDishRs = createDishStmt.getGeneratedKeys();
+        if (createDishRs.next()) {
+          savedDishId = createDishRs.getInt(1);
+        } else {
+          throw new RuntimeException("Error while creating dish with name " + dishToSave.getName());
+        }
+      }
+
+      if (isUpdate) {
+        dissociateStmt = con.prepareStatement(dissociateSql);
+        dissociateStmt.setInt(1, savedDishId);
+        dissociateStmt.executeUpdate();
+      }
+
+      if (dishToSave.getIngredients() != null && !dishToSave.getIngredients().isEmpty()) {
+        associateStmt = con.prepareStatement(associateSql);
+        for (Ingredient ingredient : dishToSave.getIngredients()) {
+          associateStmt.setInt(1, savedDishId);
+          associateStmt.setInt(2, ingredient.getId());
+          associateStmt.addBatch();
+        }
+
+        int[] batchResults = associateStmt.executeBatch();
+        for (int result : batchResults) {
+          if (result == Statement.EXECUTE_FAILED) {
+            throw new RuntimeException(
+                "Error while associating ingredients to dish with id " + dishToSave.getId());
+          }
+        }
+      }
+
+      con.commit();
+      return findDishById(savedDishId);
+    } catch (SQLException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+          System.out.println("An error occured so that transaction was rolled back");
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+      throw new RuntimeException("Failed to save dish " + dishToSave.getName() + ". Error : " + e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.err.println("Could not reset auto-commit: " + e);
+      }
+      dbConnection.attemptCloseDBConnection(
+          con,
+          findDishStmt,
+          findDishRs,
+          updateDishStmt,
+          createDishStmt,
+          dissociateStmt,
+          associateStmt);
+    }
   }
 
   @Override
@@ -263,6 +392,18 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
     }
     if (ingredient.getCategory() == null) {
       throw new IllegalArgumentException("Ingredient category cannot be null");
+    }
+  }
+
+  private void isValid(Dish dish) {
+    if (dish.getName() == null || dish.getName().isBlank()) {
+      throw new IllegalArgumentException("Dish cannot be empty");
+    }
+    if (dish.getDishType() == null) {
+      throw new IllegalArgumentException("Dish type cannot be null");
+    }
+    if (dish.getId() <= 0) {
+      throw new IllegalArgumentException("Dish id cannot be negative");
     }
   }
 }
