@@ -62,6 +62,7 @@ order by ing_id;
       dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
 
       ingredientStmt = con.prepareStatement(ingredientSql);
+      ingredientStmt.setInt(1, id);
       ingredientRs = ingredientStmt.executeQuery();
 
       List<Ingredient> ingredients = new ArrayList<>();
