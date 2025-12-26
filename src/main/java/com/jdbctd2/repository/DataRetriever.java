@@ -22,7 +22,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public Dish findDishById(Integer id) {
-    if(id == null || id <= 0){
+    if (id == null || id <= 0) {
       throw new IllegalArgumentException("Dish id must be positive");
     }
     String dishSql =
@@ -95,33 +95,38 @@ where i.id_dish = ?;
   public List<Ingredient> findIngredients(int page, int size) {
     String sql =
 """
-        select ingredient.id, ingredient.name, ingredient.price, ingredient.category, ingredient.id_dish as dish_id
+        select ingredient.id, ingredient.name, ingredient.price, ingredient.category, ingredient.id_dish
         from ingredient
         order by ingredient.id
         limit ? offset ?
 """;
-
     int offset = (page - 1) * size;
-    List<Ingredient> result = new ArrayList<>();
-    Dish dish = null;
+    Connection con = null;
+    PreparedStatement ingredientStmt = null;
+    ResultSet ingredientRs = null;
 
-    try (Connection con = dbConnection.getDBConnection();
-        PreparedStatement ps = con.prepareStatement(sql)) {
-
-      ps.setInt(1, size);
-      ps.setInt(2, offset);
-
-      try (ResultSet rs = ps.executeQuery()) {
-        while (rs.next()) {
-          dish = findDishById(rs.getInt("dish_id"));
-          result.add(createIngredientFromResultSet(rs, dish));
-        }
+    try {
+      con = dbConnection.getDBConnection();
+      ingredientStmt = con.prepareStatement(sql);
+      ingredientStmt.setInt(1, size);
+      ingredientStmt.setInt(2, offset);
+      ingredientRs = ingredientStmt.executeQuery();
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (ingredientRs.next()) {
+        Ingredient ingredient = new Ingredient();
+        ingredient.setId(ingredientRs.getInt("id"));
+        ingredient.setName(ingredientRs.getString("name"));
+        ingredient.setPrice(ingredientRs.getDouble("price"));
+        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("category")));
+        ingredient.setDish(findDishById(ingredientRs.getInt("id_dish")));
       }
 
+      return ingredients;
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Error while trying to fetch ingredients", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, ingredientStmt, ingredientRs);
     }
-    return result;
   }
 
   @Override
