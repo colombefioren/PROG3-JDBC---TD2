@@ -185,7 +185,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
         }
       }
 
-      createIngStmt = con.prepareStatement(createIngSql);
+      createIngStmt = con.prepareStatement(createIngSql, Statement.RETURN_GENERATED_KEYS);
       for (Ingredient newIngredient : newIngredients) {
         createIngStmt.setString(1, newIngredient.getName());
         createIngStmt.setDouble(2, newIngredient.getPrice());

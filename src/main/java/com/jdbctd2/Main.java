@@ -50,8 +50,12 @@ public class Main {
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
     Ingredient carotte = new Ingredient("Carotte", 2000.0, CategoryEnum.VEGETABLE);
     Ingredient laitue = new Ingredient("Laitue", 2000.0, CategoryEnum.VEGETABLE);
-    List<Ingredient> createdIngredientsJ =
-        dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
-    System.out.println("createdIngredients : " + createdIngredientsJ);
+    try {
+      List<Ingredient> createdIngredientsJ =
+          dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
+      System.out.println("createdIngredients : " + createdIngredientsJ);
+    } catch (RuntimeException e) {
+      System.out.println("Error while creating ingredients : " + e);
+    }
   }
 }
