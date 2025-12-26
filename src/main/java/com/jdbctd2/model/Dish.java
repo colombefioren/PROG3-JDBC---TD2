@@ -68,6 +68,9 @@ public class Dish {
   }
 
   public Double getDishCost() {
+    if (this.ingredients == null || this.ingredients.isEmpty()) {
+      return 0.0;
+    }
     return this.ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
   }
 
@@ -75,7 +78,7 @@ public class Dish {
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
     Dish dish = (Dish) o;
-    return id == dish.id
+    return Objects.equals(id, dish.id)
         && Objects.equals(name, dish.name)
         && dishType == dish.dishType
         && Objects.equals(ingredients, dish.ingredients);
