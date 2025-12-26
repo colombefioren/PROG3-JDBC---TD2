@@ -12,7 +12,7 @@ public class Main {
     // a) Dish findDishById(Integer id)
     System.out.println("===> Dish findDishById(Integer id) <===");
     Dish dish = dataRetriever.findDishById(1);
-    System.out.println("id=1 : " + dish);
+    System.out.println("id=1 : " + dish.getIngredients().toString());
 
     // b) List<Ingredient> findIngredients(int page, int size)
     System.out.println("\n===> List<Ingredient> findIngredients(int page, int size) <===");

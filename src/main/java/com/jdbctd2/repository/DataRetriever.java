@@ -91,7 +91,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public List<Ingredient> findIngredientsByCriteria(
-      String ingredientNmae, CategoryEnum category, String dishName, int page, int size) {
+      String ingredientName, CategoryEnum category, String dishName, int page, int size) {
     return List.of();
   }
 
