@@ -95,7 +95,7 @@ order by ing_id;
 
   @Override
   public List<Ingredient> findIngredients(int page, int size) {
-    if(page <= 0 || size <= 0) {
+    if (page <= 0 || size <= 0) {
       throw new IllegalArgumentException("Page and size must be valid values");
     }
     String sql =
