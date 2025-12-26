@@ -23,7 +23,7 @@ public class Main {
     System.out.println("id=1 : " + dishA);
 
     // b) Dish findDishById(Integer id) - id = 999
-    System.out.println("===> Dish findDishById(Integer id) | id = 999 <===");
+    System.out.println("\n===> Dish findDishById(Integer id) | id = 999 <===");
     try {
       Dish dishB = dataRetriever.findDishById(999);
       System.out.println("id=1 : " + dishB);
@@ -55,7 +55,7 @@ public class Main {
         "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=null category=VEGETABLE dishName=null page=1 size=10 <===");
     List<Ingredient> ingredientListF =
         dataRetriever.findIngredientsByCriteria(null, CategoryEnum.VEGETABLE, null, 1, 10);
-    System.out.println("ingredientListF : " + ingredientListF);
+    System.out.println("ingredientList : " + ingredientListF);
 
     // g) List<Ingredient> findIngredientsByCriteria(...) - ingredientName=cho category=null
     // dishName=Sal page=1 size=10
@@ -63,7 +63,7 @@ public class Main {
         "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=cho category=null dishName=Sal page=1 size=10 <===");
     List<Ingredient> ingredientListG =
         dataRetriever.findIngredientsByCriteria("cho", null, "Sal", 1, 10);
-    System.out.println("ingredientListF : " + ingredientListF);
+    System.out.println("ingredientList : " + ingredientListG);
 
     // h) List<Ingredient> findIngredientsByCriteria(...) - ingredientName=cho category=null
     // dishName=gâteau page=1 size=10
@@ -71,7 +71,7 @@ public class Main {
         "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=cho category=null dishName=gâteau page=1 size=10");
     List<Ingredient> ingredientListH =
         dataRetriever.findIngredientsByCriteria("cho", null, "gâteau", 1, 10);
-    System.out.println("ingredientListF : " + ingredientListF);
+    System.out.println("ingredientList : " + ingredientListH);
 
     // i) List<Ingredient> createIngredient(...) - fromage and oignon
     System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
