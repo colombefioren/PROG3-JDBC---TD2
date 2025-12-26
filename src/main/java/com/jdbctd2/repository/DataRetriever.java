@@ -22,22 +22,60 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public Dish findDishById(Integer id) {
-    String sql =
+    String dishSql =
         """
-                    select ingredient.id, ingredient.price, ingredient.category,ingredient.name,
-                   dish.id as dish_id, dish.name as dish_name, dish.dish_type as dish_type
-                    from ingredient left join dish on dish.id = ingredient.id_dish
-                    where id_dish = ?;
+                    select d.id as dish_id, d.name as dish_name, d.dish_type
+                    from Dish d
+                    where d.id = ?;
                    """;
 
-    try (Connection con = dbConnection.getDBConnection();
-        PreparedStatement ps = con.prepareStatement(sql)) {
-      ps.setInt(1, id);
-      ResultSet rs = ps.executeQuery();
-      return createDishFromResultSet(rs);
+    String ingredientSql =
+"""
+select i.id, i.name, i.price, i.category
+from Ingredient i
+where i.id_dish = 1;
+""";
 
+    Connection con = null;
+    PreparedStatement dishStmt = null;
+    ResultSet dishRs = null;
+    PreparedStatement ingredientStmt = null;
+    ResultSet ingredientRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      dishStmt = con.prepareStatement(dishSql);
+      dishStmt.setInt(1, id);
+      dishRs = dishStmt.executeQuery();
+      if (!dishRs.next()) {
+        throw new RuntimeException("Dish with ID " + id + " not found");
+      }
+
+      Dish dish = new Dish();
+      dish.setId(dishRs.getInt("dish_id"));
+      dish.setName(dishRs.getString("dish_name"));
+      dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
+
+      ingredientStmt = con.prepareStatement(ingredientSql);
+      ingredientRs = ingredientStmt.executeQuery();
+
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (ingredientRs.next()) {
+        Ingredient ingredient = new Ingredient();
+        ingredient.setId(ingredientRs.getInt("id"));
+        ingredient.setName(ingredientRs.getString("name"));
+        ingredient.setPrice(ingredientRs.getDouble("price"));
+        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("category")));
+        ingredient.setDish(dish);
+        ingredients.add(ingredient);
+      }
+
+      dish.setIngredients(ingredients);
+      return dish;
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+      throw new RuntimeException("Error while trying to retrieve dish with id " + id + e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, dishStmt, dishRs, ingredientStmt, ingredientRs);
     }
   }
 
@@ -93,38 +131,5 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   public List<Ingredient> findIngredientsByCriteria(
       String ingredientName, CategoryEnum category, String dishName, int page, int size) {
     return List.of();
-  }
-
-  private Dish createDishFromResultSet(ResultSet rs) throws SQLException {
-    Dish dish = null;
-    List<Ingredient> ingredients = new ArrayList<>();
-
-    while (rs.next()) {
-      if (dish == null) {
-        dish = new Dish();
-        dish.setId(rs.getInt("dish_id"));
-        dish.setName(rs.getString("dish_name"));
-        dish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
-      }
-      ingredients.add(createIngredientFromResultSet(rs, dish));
-    }
-
-    if (dish != null) {
-      dish.setIngredients(ingredients);
-    }
-
-    return dish;
-  }
-
-  private Ingredient createIngredientFromResultSet(ResultSet rs, Dish dish) throws SQLException {
-    Ingredient ing = new Ingredient();
-    ing.setId(rs.getInt("id"));
-    ing.setName(rs.getString("name"));
-    ing.setPrice(rs.getDouble("price"));
-    ing.setCategory(CategoryEnum.valueOf(rs.getString("category")));
-
-    ing.setDish(dish);
-
-    return ing;
   }
 }
