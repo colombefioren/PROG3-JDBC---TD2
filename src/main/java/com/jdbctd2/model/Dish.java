@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Objects;
 
 public class Dish {
-  private int id;
+  private Integer id;
   private String name;
   private DishTypeEnum dishType;
   private List<Ingredient> ingredients;
@@ -19,7 +19,7 @@ public class Dish {
     this.ingredients = ingredients;
   }
 
-  public int getId() {
+  public Integer getId() {
     return id;
   }
 

@@ -17,7 +17,7 @@ public class Main {
     Dish dishA = dataRetriever.findDishById(1);
     System.out.println("id=1 : " + dishA);
 
-    // b) Dish findDishById(Integer id) - id = 1
+    // b) Dish findDishById(Integer id) - id = 999
     System.out.println("===> Dish findDishById(Integer id) | id = 999 <===");
     try {
       Dish dishB = dataRetriever.findDishById(999);
