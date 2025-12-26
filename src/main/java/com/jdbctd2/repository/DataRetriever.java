@@ -227,9 +227,9 @@ update Ingredient set id_dish = ? where id = ?
     where i.name ilike ?
 """;
 
-    Connection con;
-    PreparedStatement findIngSmt;
-    ResultSet findIngRs;
+    Connection con = null;
+    PreparedStatement findIngSmt = null;
+    ResultSet findIngRs = null;
 
     try {
       con = dbConnection.getDBConnection();
@@ -243,6 +243,8 @@ update Ingredient set id_dish = ? where id = ?
       return dishes;
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(con,findIngRs, findIngSmt);
     }
   }
 
@@ -250,15 +252,15 @@ update Ingredient set id_dish = ? where id = ?
   public Ingredient findIngredientByName(String ingredientName) {
     String findIngByNameSql =
 """
-select i.name as ing_name, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
+select i.id as ing_id, i.name as ing_name, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
 from ingredient i
 where lower(i.name) = lower(?)
 order by ing_id;
 """;
 
-    Connection con;
-    PreparedStatement findIngByNameStmt;
-    ResultSet findIngByNameRs;
+    Connection con = null;
+    PreparedStatement findIngByNameStmt = null;
+    ResultSet findIngByNameRs = null;
 
     try {
       con = dbConnection.getDBConnection();
@@ -271,6 +273,8 @@ order by ing_id;
       return mapResultSetToIngredient(findIngByNameRs);
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(con,findIngByNameStmt, findIngByNameRs);
     }
   }
 
@@ -433,9 +437,9 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
 
     String findIngSql = getFindIngSql(ingredientName, category, dishName);
 
-    Connection con;
-    PreparedStatement findIngStmt;
-    ResultSet findIngRs;
+    Connection con = null;
+    PreparedStatement findIngStmt = null;
+    ResultSet findIngRs = null;
 
     try {
       con = dbConnection.getDBConnection();
@@ -459,6 +463,8 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
       return ingredients;
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(con,findIngRs, findIngStmt);
     }
   }
 
@@ -523,10 +529,10 @@ left join Dish d on i.id_dish = d.id
 
   private Ingredient mapResultSetToIngredient(ResultSet rs) throws SQLException {
     Ingredient ingredient = new Ingredient();
-    ingredient.setId(rs.getInt("id"));
-    ingredient.setName(rs.getString("name"));
-    ingredient.setPrice(rs.getDouble("price"));
-    ingredient.setCategory(CategoryEnum.valueOf(rs.getString("category")));
+    ingredient.setId(rs.getInt("ing_id"));
+    ingredient.setName(rs.getString("ing_name"));
+    ingredient.setPrice(rs.getDouble("ing_price"));
+    ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
     return ingredient;
   }
 }
