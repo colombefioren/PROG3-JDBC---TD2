@@ -50,8 +50,21 @@ public class Dish {
     return ingredients;
   }
 
-  public void setIngredients(List<Ingredient> ingredients) {
-    this.ingredients = ingredients == null ? new ArrayList<>() : ingredients;
+  public void setIngredients(List<Ingredient> newIngredients) {
+    if (this.ingredients != null) {
+      for (Ingredient oldIngredient : this.ingredients) {
+        if (oldIngredient != null && oldIngredient.getDish() == this) {
+          oldIngredient.setDish(null);
+        }
+      }
+    }
+    this.ingredients = newIngredients == null ? new ArrayList<>() : newIngredients;
+
+    for (Ingredient newIngredient : ingredients) {
+      if (newIngredient != null) {
+        newIngredient.setDish(this);
+      }
+    }
   }
 
   public Double getDishCost() {
