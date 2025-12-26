@@ -409,32 +409,33 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
     PreparedStatement findIngStmt;
     ResultSet findIngRs;
 
-    try{
-     con = dbConnection.getDBConnection();
-     findIngStmt = con.prepareStatement(findIngSql);
-     if (ingredientName != null && !ingredientName.isBlank()) {
-       findIngStmt.setString(1, "%" + ingredientName + "%");
-     }
-     if (category != null) {
-       findIngStmt.setString(2, category.name());
-     }
-     if (dishName != null && !dishName.isBlank()) {
-       findIngStmt.setString(3, "%" + dishName + "%");
-     }
-     findIngStmt.setInt(4, size);
-     findIngStmt.setInt(5, (page - 1) * size);
-     findIngRs = findIngStmt.executeQuery();
-     List<Ingredient> ingredients = new ArrayList<>();
-     while (findIngRs.next()) {
-       ingredients.add(mapResultSetToIngredient(findIngRs));
-     }
-     return ingredients;
+    try {
+      con = dbConnection.getDBConnection();
+      findIngStmt = con.prepareStatement(findIngSql);
+      if (ingredientName != null && !ingredientName.isBlank()) {
+        findIngStmt.setString(1, "%" + ingredientName + "%");
+      }
+      if (category != null) {
+        findIngStmt.setString(2, category.name());
+      }
+      if (dishName != null && !dishName.isBlank()) {
+        findIngStmt.setString(3, "%" + dishName + "%");
+      }
+      findIngStmt.setInt(4, size);
+      findIngStmt.setInt(5, (page - 1) * size);
+      findIngRs = findIngStmt.executeQuery();
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (findIngRs.next()) {
+        ingredients.add(mapResultSetToIngredient(findIngRs));
+      }
+      return ingredients;
     } catch (SQLException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 
-  private static String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
+  private static String getFindIngSql(
+      String ingredientName, CategoryEnum category, String dishName) {
     String findIngSql =
 """
 select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish, d.name as dish_name

@@ -38,6 +38,36 @@ public class Main {
     List<Ingredient> ingredientListD = dataRetriever.findIngredients(3, 5);
     System.out.println("page=2,size=2 : " + ingredientListD);
 
+    // e) List<Ingredient> findDishesByIngredientName(String IngredientName) - eur
+    System.out.println(
+        "\n===> List<Ingredient> findDishesByIngredientName(String IngredientName) | eur <===");
+    List<Dish> dishesByIngredientNameE = dataRetriever.findDishesByIngredientName("eur");
+    System.out.println("dishesByIngredientName : " + dishesByIngredientNameE);
+
+    // f) List<Ingredient> findIngredientsByCriteria(...) - ingredientName=null category=VEGETABLE
+    // dishName=null page=1 size=10
+    System.out.println(
+        "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=null category=VEGETABLE dishName=null page=1 size=10 <===");
+    List<Ingredient> ingredientListF =
+        dataRetriever.findIngredientsByCriteria(null, CategoryEnum.VEGETABLE, null, 1, 10);
+    System.out.println("ingredientListF : " + ingredientListF);
+
+    // g) List<Ingredient> findIngredientsByCriteria(...) - ingredientName=cho category=null
+    // dishName=Sal page=1 size=10
+    System.out.println(
+        "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=cho category=null dishName=Sal page=1 size=10 <===");
+    List<Ingredient> ingredientListG =
+        dataRetriever.findIngredientsByCriteria("cho", null, "Sal", 1, 10);
+    System.out.println("ingredientListF : " + ingredientListF);
+
+    // h) List<Ingredient> findIngredientsByCriteria(...) - ingredientName=cho category=null
+    // dishName=gâteau page=1 size=10
+    System.out.println(
+        "\n===> List<Ingredient> findIngredientsByCriteria(...) | ingredientName=cho category=null dishName=gâteau page=1 size=10");
+    List<Ingredient> ingredientListH =
+        dataRetriever.findIngredientsByCriteria("cho", null, "gâteau", 1, 10);
+    System.out.println("ingredientListF : " + ingredientListF);
+
     // i) List<Ingredient> createIngredient(...) - fromage and oignon
     System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
     Ingredient fromage = new Ingredient("Fromage", 1200.0, CategoryEnum.DAIRY);
@@ -61,11 +91,5 @@ public class Main {
     } catch (RuntimeException e) {
       System.out.println("Error while creating ingredients : " + e);
     }
-
-    // e) List<Ingredient> findDishesByIngredientName(String IngredientName) - eur
-    System.out.println(
-        "\n===> List<Ingredient> findDishesByIngredientName(String IngredientName) | eur <===");
-    List<Dish> dishesByIngredientNameE = dataRetriever.findDishesByIngredientName("eur");
-    System.out.println("dishesByIngredientName : " + dishesByIngredientNameE);
   }
 }
