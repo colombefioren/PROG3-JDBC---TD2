@@ -2,6 +2,7 @@ package com.jdbctd2;
 
 import com.jdbctd2.model.CategoryEnum;
 import com.jdbctd2.model.Dish;
+import com.jdbctd2.model.DishTypeEnum;
 import com.jdbctd2.model.Ingredient;
 import com.jdbctd2.repository.DataRetriever;
 import java.util.ArrayList;
@@ -90,6 +91,11 @@ public class Main {
       System.out.println("createdIngredients : " + createdIngredientsJ);
     } catch (RuntimeException e) {
       System.out.println("Error while creating ingredients : " + e);
+
+      // k) Dish saveDish(...) - soupe de légumes
+      System.out.println("\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
+      Ingredient oignonIngredient = dataRetriever.findIngredientByName("oignon");
+      Dish dishK = new Dish("Soupe de légumes", DishTypeEnum.START,oignonIngredient);
     }
   }
 }
