@@ -112,10 +112,13 @@ public class Main {
       Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
       Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
       Dish newDishL =
-          new Dish(1,
+          new Dish(
+              1,
               "Salade fraîche",
               DishTypeEnum.START,
-              new ArrayList<>(Arrays.asList(oignonIngredient, laitueIngredient, tomateIngredient, fromageIngredient)));
+              new ArrayList<>(
+                  Arrays.asList(
+                      oignonIngredient, laitueIngredient, tomateIngredient, fromageIngredient)));
       Dish savedDishL = dataRetriever.saveDish(newDishL);
       System.out.println("savedDish : " + savedDishL);
 
@@ -123,7 +126,8 @@ public class Main {
       System.out.println(
           "\n===> Dish saveDish(...) | id=1 name=Salade de fromage dishType=START ingredients=Fromage <===");
       Dish newDishM =
-          new Dish(1,
+          new Dish(
+              1,
               "Salade de fromage",
               DishTypeEnum.START,
               new ArrayList<>(Collections.singletonList(fromageIngredient)));
