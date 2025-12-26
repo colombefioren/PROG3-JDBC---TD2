@@ -33,6 +33,9 @@ public class Ingredient {
     }
 
     public void setName(String name) {
+        if(name == null || name.isBlank()){
+            throw  new IllegalArgumentException("Ingredient name cannot be null or blank");
+        }
         this.name = name;
     }
 
@@ -41,6 +44,9 @@ public class Ingredient {
     }
 
     public void setPrice(Double price) {
+        if(price == null || price < 0){
+            throw new IllegalArgumentException("Ingredient price cannot be negative");
+        }
         this.price = price;
     }
 
@@ -58,6 +64,10 @@ public class Ingredient {
 
     public void setDish(Dish dish) {
         this.dish = dish;
+    }
+
+    public String getDishName(){
+        return dish == null ? null : this.dish.getName();
     }
 
     @Override
@@ -81,9 +91,5 @@ public class Ingredient {
                 ", category=" + category +
                 ", dish=" + dish +
                 '}';
-    }
-
-    public String getDishName(){
-        return dish == null ? null : this.dish.getName();
     }
 }
