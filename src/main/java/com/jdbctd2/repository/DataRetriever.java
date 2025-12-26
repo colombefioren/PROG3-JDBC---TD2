@@ -153,7 +153,7 @@ order by ing_id
 
     String findDishSql =
         """
-  select id from Dish d where d.id = ?
+  select id as dish_id from Dish d where d.id = ?
   """;
 
     String updateDishSql =
@@ -583,8 +583,10 @@ left join Dish d on i.id_dish = d.id
     if (dish.getDishType() == null) {
       throw new IllegalArgumentException("Dish type cannot be null");
     }
-    if (dish.getId() <= 0) {
-      throw new IllegalArgumentException("Dish id cannot be negative");
+    if (dish.getId() != null) {
+      if (dish.getId() <= 0) {
+        throw new IllegalArgumentException("Dish id cannot be negative");
+      }
     }
   }
 
