@@ -98,7 +98,7 @@ order by ing_id;
   public List<Ingredient> findIngredients(int page, int size) {
     String sql =
 """
-        select ingredient.id, ingredient.name, ingredient.price, ingredient.category, ingredient.id_dish
+        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category, ingredient.id_dish as id_dish
         from ingredient
         order by ingredient.id
         limit ? offset ?
@@ -117,10 +117,10 @@ order by ing_id;
       List<Ingredient> ingredients = new ArrayList<>();
       while (ingredientRs.next()) {
         Ingredient ingredient = new Ingredient();
-        ingredient.setId(ingredientRs.getInt("id"));
-        ingredient.setName(ingredientRs.getString("name"));
-        ingredient.setPrice(ingredientRs.getDouble("price"));
-        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("category")));
+        ingredient.setId(ingredientRs.getInt("ing_id"));
+        ingredient.setName(ingredientRs.getString("ing_name"));
+        ingredient.setPrice(ingredientRs.getDouble("ing_price"));
+        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("ing_category")));
         ingredient.setDish(findDishById(ingredientRs.getInt("id_dish")));
       }
 
