@@ -247,6 +247,34 @@ update Ingredient set id_dish = ? where id = ?
   }
 
   @Override
+  public Ingredient findIngredientByName(String ingredientName) {
+    String findIngByNameSql =
+"""
+select i.name as ing_name, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
+from ingredient i
+where lower(i.name) = lower(?)
+order by ing_id;
+""";
+
+    Connection con;
+    PreparedStatement findIngByNameStmt;
+    ResultSet findIngByNameRs;
+
+    try{
+      con = dbConnection.getDBConnection();
+      findIngByNameStmt = con.prepareStatement(findIngByNameSql);
+      findIngByNameStmt.setString(1, ingredientName);
+      findIngByNameRs = findIngByNameStmt.executeQuery();
+      if(!findIngByNameRs.next()){
+        return null;
+      }
+      return mapResultSetToIngredient(findIngByNameRs);
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
+  }
+
+  @Override
   public List<Ingredient> findIngredients(int page, int size) {
     if (page <= 0 || size <= 0) {
       throw new IllegalArgumentException("Page and size must be valid values");
