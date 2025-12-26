@@ -22,6 +22,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public Dish findDishById(Integer id) {
+    if(id == null || id <= 0){
+      throw new IllegalArgumentException("Dish id must be positive");
+    }
     String dishSql =
         """
                     select d.id as dish_id, d.name as dish_name, d.dish_type
