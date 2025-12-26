@@ -24,6 +24,9 @@ public class Ingredient {
   }
 
   public void setId(int id) {
+    if (id <= 0) {
+      throw new IllegalArgumentException("Ingredient id must be positive");
+    }
     this.id = id;
   }
 

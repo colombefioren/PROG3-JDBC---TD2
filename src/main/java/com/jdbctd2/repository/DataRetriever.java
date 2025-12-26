@@ -5,12 +5,11 @@ import com.jdbctd2.model.CategoryEnum;
 import com.jdbctd2.model.Dish;
 import com.jdbctd2.model.DishTypeEnum;
 import com.jdbctd2.model.Ingredient;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class DataRetriever implements IngredientRepository, DishRepository {
 
@@ -135,12 +134,132 @@ order by ing_id;
 
   @Override
   public List<Ingredient> createIngredients(List<Ingredient> newIngredients) {
-    return List.of();
+    if (newIngredients == null || newIngredients.isEmpty()) {
+      throw new IllegalArgumentException("Ingredients list cannot be empty");
+    }
+
+    for (Ingredient newIngredient : newIngredients) {
+      if (newIngredient == null) {
+        throw new IllegalArgumentException("Ingredients list cannot contain null values");
+      }
+      isValid(newIngredient);
+    }
+
+    Set<String> ingredientNames = new HashSet<>();
+    for (Ingredient newIngredient : newIngredients) {
+      if (!ingredientNames.add(newIngredient.getName().toLowerCase())) {
+        throw new IllegalArgumentException(
+            "Duplicate ingredient in provided list" + newIngredient.getName());
+      }
+    }
+
+    String createIngSql =
+"""
+insert into ingredient (name, price, category, id_dish) values (?, ?, ?, ?);
+""";
+
+    String findIngSql =
+"""
+select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) = lower(?)
+""";
+
+    Connection con = null;
+    PreparedStatement createIngStmt = null;
+    PreparedStatement findIngStmt = null;
+    ResultSet findIngRs = null;
+    ResultSet generatedKeys = null;
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      findIngStmt = con.prepareStatement(findIngSql);
+
+      for (Ingredient newIngredient : newIngredients) {
+        findIngStmt.setString(1, newIngredient.getName());
+        findIngRs = findIngStmt.executeQuery();
+        if (findIngRs.next()) {
+          con.rollback();
+          throw new RuntimeException("Ingredient already exists: " + newIngredient.getName());
+        }
+      }
+
+      createIngStmt = con.prepareStatement(createIngSql);
+      for (Ingredient newIngredient : newIngredients) {
+        createIngStmt.setString(1, newIngredient.getName());
+        createIngStmt.setDouble(2, newIngredient.getPrice());
+        createIngStmt.setString(3, newIngredient.getCategory().name());
+
+        if (newIngredient.getDish() != null) {
+          createIngStmt.setInt(4, newIngredient.getDish().getId());
+        } else {
+          createIngStmt.setNull(4, Types.INTEGER);
+        }
+        createIngStmt.addBatch();
+      }
+      int[] batchResults = createIngStmt.executeBatch();
+
+      for (int i = 0; i < batchResults.length; i++) {
+        if (batchResults[i] == Statement.EXECUTE_FAILED) {
+          con.rollback();
+          throw new RuntimeException(
+              "Error while creating ingredient: "
+                  + newIngredients.get(i).getName()
+                  + ". No ingredients are thus inserted!");
+        }
+      }
+      generatedKeys = createIngStmt.getGeneratedKeys();
+      List<Ingredient> createdIngredients = new ArrayList<>();
+      int index = 0;
+      while (generatedKeys.next()) {
+        Ingredient createdIngredient = new Ingredient();
+        createdIngredient.setId(generatedKeys.getInt(1));
+        createdIngredient.setName(newIngredients.get(index).getName());
+        createdIngredient.setPrice(newIngredients.get(index).getPrice());
+        createdIngredient.setCategory(newIngredients.get(index).getCategory());
+        createdIngredient.setDish(newIngredients.get(index).getDish());
+        createdIngredients.add(createdIngredient);
+        index++;
+      }
+      con.commit();
+      return createdIngredients;
+    } catch (SQLException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+          System.out.println("An error occured so that transaction was rolled back");
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+      throw new RuntimeException(
+          "Failed to create ingredients. All changes rolled back (atomicity). " + "Error: " + e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.err.println("Could not reset auto-commit: " + e);
+      }
+      dbConnection.attemptCloseDBConnection(
+          con, createIngStmt, findIngStmt, findIngRs, generatedKeys);
+    }
   }
 
   @Override
   public List<Ingredient> findIngredientsByCriteria(
       String ingredientName, CategoryEnum category, String dishName, int page, int size) {
     return List.of();
+  }
+
+  private void isValid(Ingredient ingredient) {
+    if (ingredient.getName() == null || ingredient.getName().isBlank()) {
+      throw new IllegalArgumentException("Ingredient cannot be empty");
+    }
+    if (ingredient.getPrice() == null || ingredient.getPrice() < 0) {
+      throw new IllegalArgumentException("Ingredient price cannot be negative");
+    }
+    if (ingredient.getCategory() == null) {
+      throw new IllegalArgumentException("Ingredient category cannot be null");
+    }
   }
 }
