@@ -1,9 +1,9 @@
 package com.jdbctd2;
 
+import com.jdbctd2.model.CategoryEnum;
 import com.jdbctd2.model.Dish;
 import com.jdbctd2.model.Ingredient;
 import com.jdbctd2.repository.DataRetriever;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -40,7 +40,18 @@ public class Main {
 
     // i) List<Ingredient> createIngredient(...) - fromage and oignon
     System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
-    Ingredient fromage = new Ingredient(name, )
-    List<Ingredient> createdIngredientsI = dataRetriever.createIngredients(new ArrayList<>())
+    Ingredient fromage = new Ingredient("Fromage", 1200.0, CategoryEnum.DAIRY);
+    Ingredient oignon = new Ingredient("Oignon", 500.0, CategoryEnum.VEGETABLE);
+    List<Ingredient> createdIngredientsI =
+        dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(fromage, oignon)));
+    System.out.println("createdIngredients : " + createdIngredientsI);
+
+    // j) List<Ingredient> createIngredient(...) - carotte and laitue
+    System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
+    Ingredient carotte = new Ingredient("Carotte", 2000.0, CategoryEnum.VEGETABLE);
+    Ingredient laitue = new Ingredient("Laitue", 2000.0, CategoryEnum.VEGETABLE);
+    List<Ingredient> createdIngredientsJ =
+        dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
+    System.out.println("createdIngredients : " + createdIngredientsJ);
   }
 }
