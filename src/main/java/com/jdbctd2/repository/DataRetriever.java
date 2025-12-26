@@ -29,14 +29,16 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         """
                     select d.id as dish_id, d.name as dish_name, d.dish_type
                     from Dish d
-                    where d.id = ?;
+                    where d.id = ?
+                    order by dish_id;
                    """;
 
     String ingredientSql =
 """
-select i.id, i.name, i.price, i.category
+select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
 from Ingredient i
-where i.id_dish = ?;
+where i.id_dish = ?
+order by ing_id;
 """;
 
     Connection con = null;
@@ -65,10 +67,10 @@ where i.id_dish = ?;
       List<Ingredient> ingredients = new ArrayList<>();
       while (ingredientRs.next()) {
         Ingredient ingredient = new Ingredient();
-        ingredient.setId(ingredientRs.getInt("id"));
-        ingredient.setName(ingredientRs.getString("name"));
-        ingredient.setPrice(ingredientRs.getDouble("price"));
-        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("category")));
+        ingredient.setId(ingredientRs.getInt("ing_id"));
+        ingredient.setName(ingredientRs.getString("ing_name"));
+        ingredient.setPrice(ingredientRs.getDouble("ing_price"));
+        ingredient.setCategory(CategoryEnum.valueOf(ingredientRs.getString("ing_category")));
         ingredients.add(ingredient);
       }
 
