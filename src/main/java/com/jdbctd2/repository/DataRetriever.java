@@ -560,7 +560,7 @@ left join Dish d on i.id_dish = d.id
       findIngSql += "d.name ilike ?";
     }
 
-    findIngSql += " limit ? offset ? order by ing_id";
+    findIngSql += " order by ing_id limit ? offset ?";
     return findIngSql;
   }
 
