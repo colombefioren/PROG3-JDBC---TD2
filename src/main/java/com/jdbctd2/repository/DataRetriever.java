@@ -312,7 +312,7 @@ update Ingredient set id_dish = ? where id = ?
   public Ingredient findIngredientByName(String ingredientName) {
     String findIngByNameSql =
 """
-select i.id as ing_id, i.name as ing_name, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
+select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
 from ingredient i
 where lower(i.name) = lower(?)
 order by ing_id
