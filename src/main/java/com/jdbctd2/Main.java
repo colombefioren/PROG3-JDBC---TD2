@@ -181,8 +181,11 @@ public class Main {
 
     // create new dish with price
     System.out.println("\n=== Test 3: Créer un nouveau plat avec prix ===");
-
-    Dish newDish = new Dish("Salade César", DishTypeEnum.START, new ArrayList<>(List.of(laitue)));
+    Ingredient laitueIngredient = dataRetriever.findIngredientByName("laitue");
+    Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
+    Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
+    Dish newDish =
+        new Dish("Salade César", DishTypeEnum.START, new ArrayList<>(List.of(laitueIngredient)));
     newDish.setPrice(2500.0);
 
     Dish savedNewDish = dataRetriever.saveDish(newDish);
