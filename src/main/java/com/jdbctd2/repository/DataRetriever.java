@@ -281,7 +281,7 @@ update Ingredient set id_dish = ? where id = ?
   public List<Dish> findDishesByIngredientName(String IngredientName) {
     String findIngSql =
 """
-    select d.id as dish_id, d.name as dish_name, d.dish_type, i.name as ing_name
+    select d.id as dish_id, i.name as ing_name
     from Dish d
     join Ingredient i on d.id = i.id_dish
     where i.name ilike ?
@@ -457,7 +457,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
         createdIngredient.setName(newIngredients.get(index).getName());
         createdIngredient.setPrice(newIngredients.get(index).getPrice());
         createdIngredient.setCategory(newIngredients.get(index).getCategory());
-        if(newIngredients.get(index).getDish() != null){
+        if (newIngredients.get(index).getDish() != null) {
           createdIngredient.setDish(newIngredients.get(index).getDish());
         }
         createdIngredients.add(createdIngredient);
