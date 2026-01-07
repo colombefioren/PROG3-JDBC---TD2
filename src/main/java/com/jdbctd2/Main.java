@@ -140,9 +140,9 @@ public class Main {
 
     System.out.println("\n=== Test 1: findDishById avec getGrossMargin ===");
 
-    // test with dish with price 2000 (id=4)
+    // test with dish with price 2000 (id=5)
     try {
-      Dish dish1 = dataRetriever.findDishById(5);
+      Dish dish1 = dataRetriever.findDishById(2);
       System.out.println(dish1);
       System.out.println("Dish 1: " + dish1.getName());
       System.out.println("Prix: " + dish1.getPrice());
@@ -152,23 +152,11 @@ public class Main {
       System.out.println("Erreur: " + e.getMessage());
     }
 
-    //  test with dish without id (id=3)
-    try {
-      Dish dish3 = dataRetriever.findDishById(3);
-      System.out.println(dish3);
-      System.out.println("\nDish 3: " + dish3.getName());
-      System.out.println("Prix: " + dish3.getPrice());
-      System.out.println("Coût des ingrédients: " + dish3.getDishCost());
-      System.out.println("Marge brute: " + dish3.getGrossMargin());
-    } catch (IllegalStateException e) {
-      System.out.println("Erreur attendue: " + e.getMessage());
-    }
-
     // test save dish to update the price
     System.out.println("\n=== Test 2: saveDish avec mise à jour du prix ===");
 
     // update the price of an existing dish
-    Dish dishToUpdate = dataRetriever.findDishById(3); // Riz aux légumes
+    Dish dishToUpdate = dataRetriever.findDishById(2); // Riz aux légumes
     dishToUpdate.setPrice(3500.0);
     Dish updatedDish = dataRetriever.saveDish(dishToUpdate);
     System.out.println("Plat mis à jour: " + updatedDish.getName());
