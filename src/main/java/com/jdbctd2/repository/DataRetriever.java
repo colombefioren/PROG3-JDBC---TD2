@@ -457,7 +457,9 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
         createdIngredient.setName(newIngredients.get(index).getName());
         createdIngredient.setPrice(newIngredients.get(index).getPrice());
         createdIngredient.setCategory(newIngredients.get(index).getCategory());
-        createdIngredient.setDish(newIngredients.get(index).getDish());
+        if(newIngredients.get(index).getDish() != null){
+          createdIngredient.setDish(newIngredients.get(index).getDish());
+        }
         createdIngredients.add(createdIngredient);
         index++;
       }
