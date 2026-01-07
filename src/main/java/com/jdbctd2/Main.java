@@ -143,6 +143,7 @@ public class Main {
     // test with dish with price 2000 (id=1)
     try {
       Dish dish1 = dataRetriever.findDishById(1);
+      System.out.println(dish1);
       System.out.println("Dish 1: " + dish1.getName());
       System.out.println("Prix: " + dish1.getPrice());
       System.out.println("Coût des ingrédients: " + dish1.getDishCost());
