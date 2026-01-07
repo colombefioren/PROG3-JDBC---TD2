@@ -163,7 +163,7 @@ update Dish d set name = ?, dish_type = ?::dish_type where d.id = ?
 
     String createDishSql =
 """
-insert into Dish (name, dish_type) values (?, ?::dish_type) returning id
+insert into Dish (name, dish_type) values (?, ?::dish_type)
 """;
 
     String dissociateSql =
