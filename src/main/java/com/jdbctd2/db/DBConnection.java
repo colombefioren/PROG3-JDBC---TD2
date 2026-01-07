@@ -47,7 +47,7 @@ public class DBConnection {
         try {
           resource.close();
         } catch (Exception e) {
-          throw new RuntimeException("Error while trying to close the resource" + e);
+          System.out.println("Error while trying to close the resource" + e);
         }
       }
     }
