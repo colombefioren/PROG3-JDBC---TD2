@@ -138,7 +138,7 @@ public class Main {
       System.out.println("savedDish : " + savedDishM);
     }
 
-    System.out.println("=== Test 1: findDishById avec getGrossMargin ===");
+    System.out.println("\n=== Test 1: findDishById avec getGrossMargin ===");
 
     // test with dish with price 2000 (id=1)
     try {
