@@ -75,7 +75,7 @@ insert into Ingredient (name, price, category, id_dish) values
       } catch (SQLException e) {
         System.err.println("Could not reset auto-commit: " + e);
       }
-      dbConnection.attemptCloseDBConnection(con, stmt);
+      dbConnection.attemptCloseDBConnection(stmt, con);
     }
   }
 
@@ -139,7 +139,7 @@ order by ing_id
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to retrieve dish with id " + id + e);
     } finally {
-      dbConnection.attemptCloseDBConnection(con, dishStmt, dishRs, ingredientStmt, ingredientRs);
+      dbConnection.attemptCloseDBConnection(dishRs, dishStmt, ingredientRs, ingredientStmt, con);
     }
   }
 
@@ -267,13 +267,13 @@ update Ingredient set id_dish = ? where id = ?
         System.err.println("Could not reset auto-commit: " + e);
       }
       dbConnection.attemptCloseDBConnection(
-          con,
-          findDishStmt,
           findDishRs,
+          findDishStmt,
           updateDishStmt,
           createDishStmt,
           dissociateStmt,
-          associateStmt);
+          associateStmt,
+          con);
     }
   }
 
@@ -304,7 +304,7 @@ update Ingredient set id_dish = ? where id = ?
     } catch (SQLException e) {
       throw new RuntimeException(e);
     } finally {
-      dbConnection.attemptCloseDBConnection(con, findIngRs, findIngSmt);
+      dbConnection.attemptCloseDBConnection(findIngRs, findIngSmt, con);
     }
   }
 
@@ -334,7 +334,7 @@ order by ing_id
     } catch (SQLException e) {
       throw new RuntimeException(e);
     } finally {
-      dbConnection.attemptCloseDBConnection(con, findIngByNameStmt, findIngByNameRs);
+      dbConnection.attemptCloseDBConnection(findIngByNameRs, findIngByNameStmt, con);
     }
   }
 
@@ -370,7 +370,7 @@ order by ing_id
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to fetch ingredients", e);
     } finally {
-      dbConnection.attemptCloseDBConnection(con, ingredientStmt, ingredientRs);
+      dbConnection.attemptCloseDBConnection(ingredientRs, ingredientStmt, con);
     }
   }
 
@@ -485,7 +485,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
         System.err.println("Could not reset auto-commit: " + e);
       }
       dbConnection.attemptCloseDBConnection(
-          con, createIngStmt, findIngStmt, findIngRs, generatedKeys);
+          findIngRs, findIngStmt, generatedKeys, createIngStmt, con);
     }
   }
 
@@ -527,7 +527,7 @@ select i.id as ing_id, i.name as ing_name from ingredient i where lower(i.name) 
     } catch (SQLException e) {
       throw new RuntimeException(e);
     } finally {
-      dbConnection.attemptCloseDBConnection(con, findIngRs, findIngStmt);
+      dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
     }
   }
 
