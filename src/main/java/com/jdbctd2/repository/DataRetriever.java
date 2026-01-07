@@ -86,7 +86,7 @@ insert into Ingredient (name, price, category, id_dish) values
     }
     String dishSql =
         """
-                    select d.id as dish_id, d.name as dish_name, d.dish_type
+                    select d.id as dish_id, d.name as dish_name, d.dish_type, d.price as dish_price
                     from Dish d
                     where d.id = ?
                     order by dish_id
@@ -119,7 +119,7 @@ order by ing_id
       dish.setId(dishRs.getInt("dish_id"));
       dish.setName(dishRs.getString("dish_name"));
       dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
-
+      dish.setPrice(dishRs.getDouble("dish_price"));
       ingredientStmt = con.prepareStatement(ingredientSql);
       ingredientStmt.setInt(1, id);
       ingredientRs = ingredientStmt.executeQuery();
@@ -158,12 +158,12 @@ order by ing_id
 
     String updateDishSql =
 """
-update Dish d set name = ?, dish_type = ?::dish_type where d.id = ?
+update Dish d set name = ?, dish_type = ?::dish_type, price = ? where d.id = ?
 """;
 
     String createDishSql =
 """
-insert into Dish (name, dish_type) values (?, ?::dish_type)
+insert into Dish (name, dish_type, price) values (?, ?::dish_type, ?)
 """;
 
     String dissociateSql =
@@ -205,7 +205,12 @@ update Ingredient set id_dish = ? where id = ?
         updateDishStmt = con.prepareStatement(updateDishSql);
         updateDishStmt.setString(1, dishToSave.getName());
         updateDishStmt.setString(2, dishToSave.getDishType().name());
-        updateDishStmt.setInt(3, dishToSave.getId());
+        if (dishToSave.getPrice() != null) {
+          updateDishStmt.setDouble(3, dishToSave.getPrice());
+        } else {
+          updateDishStmt.setNull(3, Types.DOUBLE);
+        }
+        updateDishStmt.setInt(4, dishToSave.getId());
         int rowsUpdated = updateDishStmt.executeUpdate();
         if (rowsUpdated == 0) {
           throw new RuntimeException("Error while updating dish with id " + dishToSave.getId());
@@ -214,6 +219,11 @@ update Ingredient set id_dish = ? where id = ?
         createDishStmt = con.prepareStatement(createDishSql, Statement.RETURN_GENERATED_KEYS);
         createDishStmt.setString(1, dishToSave.getName());
         createDishStmt.setString(2, dishToSave.getDishType().name());
+        if (dishToSave.getPrice() != null) {
+          createDishStmt.setDouble(3, dishToSave.getPrice());
+        } else {
+          createDishStmt.setNull(3, Types.DOUBLE);
+        }
         createDishStmt.executeUpdate();
         createDishRs = createDishStmt.getGeneratedKeys();
         if (createDishRs.next()) {
@@ -589,6 +599,9 @@ left join Dish d on i.id_dish = d.id
       if (dish.getId() <= 0) {
         throw new IllegalArgumentException("Dish id cannot be negative");
       }
+    }
+    if (dish.getPrice() != null && dish.getPrice() < 0) {
+      throw new IllegalArgumentException("Dish price cannot be negative");
     }
   }
 
