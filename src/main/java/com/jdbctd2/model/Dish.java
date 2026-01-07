@@ -73,7 +73,7 @@ public class Dish {
     }
   }
 
-  public Double getDishCost() {
+  public Double getDishPrice() {
     if (this.ingredients == null || this.ingredients.isEmpty()) {
       return 0.0;
     }
