@@ -140,9 +140,9 @@ public class Main {
 
     System.out.println("\n=== Test 1: findDishById avec getGrossMargin ===");
 
-    // test with dish with price 2000 (id=1)
+    // test with dish with price 2000 (id=4)
     try {
-      Dish dish1 = dataRetriever.findDishById(1);
+      Dish dish1 = dataRetriever.findDishById(5);
       System.out.println(dish1);
       System.out.println("Dish 1: " + dish1.getName());
       System.out.println("Prix: " + dish1.getPrice());
@@ -155,6 +155,7 @@ public class Main {
     //  test with dish without id (id=3)
     try {
       Dish dish3 = dataRetriever.findDishById(3);
+      System.out.println(dish3);
       System.out.println("\nDish 3: " + dish3.getName());
       System.out.println("Prix: " + dish3.getPrice());
       System.out.println("Coût des ingrédients: " + dish3.getDishCost());

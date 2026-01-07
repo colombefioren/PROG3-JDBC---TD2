@@ -27,12 +27,13 @@ truncate table Ingredient, Dish restart identity cascade
 
     String insertDishSql =
 """
-insert into Dish (name, dish_type) values
-        ('Salade fraîche', 'START'),
-        ('Poulet grillé', 'MAIN'),
-        ('Riz aux légumes', 'MAIN'),
-        ('Gâteau au chocolat', 'DESSERT'),
-        ('Salade de fruits', 'DESSERT')
+ INSERT INTO Dish (name, dish_type, price) VALUES
+            ('Soupe de légumes', 'START', NULL),
+            ('Salade de fromage', 'START', 2000.00),
+            ('Poulet grillé', 'MAIN', 6000.00),
+            ('Riz aux légumes', 'MAIN', NULL),
+            ('Gâteau au chocolat', 'DESSERT', 1000.00),
+            ('Salade de fruits', 'DESSERT', NULL)
 """;
 
     String insertIngredientSql =

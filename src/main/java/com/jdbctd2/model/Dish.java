@@ -136,6 +136,8 @@ public class Dish {
         + dishType
         + ", ingredients="
         + ingredients
+        + ", price="
+        + price
         + '}';
   }
 }
