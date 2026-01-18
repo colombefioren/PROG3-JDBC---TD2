@@ -9,7 +9,7 @@ public class Dish {
   private String name;
   private DishTypeEnum dishType;
   private List<Ingredient> ingredients;
-  private Double price;
+  private Double sellingPrice;
 
   public Dish() {}
 
@@ -27,12 +27,12 @@ public class Dish {
   }
 
   public Dish(
-      int id, String name, DishTypeEnum dishType, List<Ingredient> ingredients, Double price) {
+      int id, String name, DishTypeEnum dishType, List<Ingredient> ingredients, Double sellingPrice) {
     this.id = id;
     this.name = name;
     this.dishType = dishType;
     this.ingredients = ingredients;
-    this.price = price;
+    this.sellingPrice = sellingPrice;
   }
 
   public Integer getId() {
@@ -90,25 +90,25 @@ public class Dish {
     return this.ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
   }
 
-  public Double getPrice() {
-    return this.price;
+  public Double getSellingPrice() {
+    return this.sellingPrice;
   }
 
-  public void setPrice(Double price) {
+  public void setSellingPrice(Double price) {
     if (price != null) {
       if (price < 0) {
         throw new IllegalArgumentException("Dish price cannot be negative");
       }
     }
-    this.price = price;
+    this.sellingPrice = price;
   }
 
   public Double getGrossMargin() {
-    if (this.price == null) {
+    if (this.sellingPrice == null) {
       throw new IllegalStateException("Cannot calculate gross margin: sale price is not set");
     }
     Double cost = getDishCost();
-    return this.price - cost;
+    return this.sellingPrice - cost;
   }
 
   @Override
@@ -139,7 +139,7 @@ public class Dish {
         + ", ingredients="
         + ingredients
         + ", price="
-        + price
+        + sellingPrice
         + '}';
   }
 }

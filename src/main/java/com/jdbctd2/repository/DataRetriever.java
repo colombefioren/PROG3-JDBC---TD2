@@ -113,7 +113,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
     String dishSql =
         """
-                            select d.id as dish_id, d.name as dish_name, d.dish_type, d.price as dish_price
+                            select d.id as dish_id, d.name as dish_name, d.dish_type, d.selling_price as dish_price
                             from Dish d
                             where d.id = ?
                             order by dish_id
@@ -441,8 +441,10 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
   private List<Ingredient> findIngredientByDishId(Integer idDish) {
     String sql =
         """
-        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category, ingredient.id_dish
-        from ingredient where id_dish = ?
+        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category
+        from ingredient
+        join
+        where id_dish = ?
         """;
 
     Connection con = null;
