@@ -8,12 +8,12 @@ values (1, 1, 0.20, 'KG'),
 
 select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
-update table dish
+update dish
 set selling_price = 3500.00
 where id = 1;
-update table dish
+update dish
 set selling_price = 12000.00
 where id = 2;
-update table dish
+update dish
 set selling_price = 8000.00
 where id = 4;
