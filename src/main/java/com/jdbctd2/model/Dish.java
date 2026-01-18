@@ -70,20 +70,16 @@ public class Dish {
     return dishIngredients;
   }
 
-  public void setDishIngredients(List<DishIngredient> dishIngredients) {
-    this.dishIngredients = dishIngredients != null ? dishIngredients : new ArrayList<>();
-  }
+  public void setDishIngredients(List<DishIngredient> newDishIngredients) {
+    this.dishIngredients.clear();
 
-  public void addIngredient(Ingredient ingredient, Double quantity, UnitEnum unit) {
-    if (ingredient == null) return;
-
-    DishIngredient dishIngredient = new DishIngredient();
-    dishIngredient.setDish(this);
-    dishIngredient.setIngredient(ingredient);
-    dishIngredient.setQuantityRequired(quantity);
-    dishIngredient.setUnit(unit);
-
-    this.dishIngredients.add(dishIngredient);
+    if (newDishIngredients != null) {
+      for (DishIngredient di : newDishIngredients) {
+        if (di != null) {
+          di.setDish(this);
+        }
+      }
+    }
   }
 
   public List<Ingredient> getIngredients() {

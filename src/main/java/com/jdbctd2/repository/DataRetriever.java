@@ -1,10 +1,7 @@
 package com.jdbctd2.repository;
 
 import com.jdbctd2.db.DBConnection;
-import com.jdbctd2.model.CategoryEnum;
-import com.jdbctd2.model.Dish;
-import com.jdbctd2.model.DishTypeEnum;
-import com.jdbctd2.model.Ingredient;
+import com.jdbctd2.model.*;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -136,8 +133,9 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       dish.setId(dishRs.getInt("dish_id"));
       dish.setName(dishRs.getString("dish_name"));
       dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
-      dish.setPrice(dishRs.getObject("dish_price") == null ? null : dishRs.getDouble("dish_price"));
-      dish.setIngredients(findIngredientByDishId(id));
+      dish.setSellingPrice(
+          dishRs.getObject("dish_price") == null ? null : dishRs.getDouble("dish_price"));
+      dish.setDishIngredients(findDishIngredientsByDishId(id));
       return dish;
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to retrieve dish with id " + id + e);
@@ -647,6 +645,52 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
             sequenceName, columnName, tableName);
     try (PreparedStatement ps = conn.prepareStatement(setValSql)) {
       ps.executeQuery();
+    }
+  }
+
+  private List<DishIngredient> findDishIngredientsByDishId(Integer dishId) {
+    String sql =
+"""
+  select di.id as di_id, di.quantity_required, di.unit,
+  i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+  from dish_ingredient di
+  join ingredient i on di.id_ingredient = i.id
+  where di.id_dish = ?
+  order by di_id
+""";
+
+    Connection con = null;
+    PreparedStatement pstmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      pstmt = con.prepareStatement(sql);
+      pstmt.setInt(1, dishId);
+      rs = pstmt.executeQuery();
+
+      List<DishIngredient> dishIngredients = new ArrayList<>();
+      while (rs.next()) {
+        DishIngredient dishIngredient = new DishIngredient();
+        dishIngredient.setId(rs.getInt("di_id"));
+        dishIngredient.setQuantityRequired(rs.getDouble("quantity_required"));
+        dishIngredient.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+
+        Ingredient ingredient = new Ingredient();
+        ingredient.setId(rs.getInt("ing_id"));
+        ingredient.setName(rs.getString("ing_name"));
+        ingredient.setPrice(rs.getDouble("ing_price"));
+        ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
+        dishIngredient.setIngredient(ingredient);
+        dishIngredients.add(dishIngredient);
+      }
+
+      return dishIngredients;
+
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, pstmt, con);
     }
   }
 }
