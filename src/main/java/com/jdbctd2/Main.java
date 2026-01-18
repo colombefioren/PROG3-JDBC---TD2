@@ -18,8 +18,6 @@ public class Main {
     System.out.println("===> Dish findDishById(Integer id) | id = 1 <===");
     Dish dishA = dataRetriever.findDishById(1);
     System.out.println("id=1 : " + dishA);
-    System.out.println("Coût du plat: " + dishA.getDishCost());
-    System.out.println("Prix de vente: " + dishA.getSellingPrice());
 
     // b) Dish findDishById(Integer id) - id = 999
     System.out.println("\n===> Dish findDishById(Integer id) | id = 999 <===");
@@ -87,7 +85,7 @@ public class Main {
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
     Ingredient carotte = new Ingredient("Carotte", 2000.0, CategoryEnum.VEGETABLE);
-    Ingredient laitue = new Ingredient("Laitue", 2000.0, CategoryEnum.VEGETABLE);
+    Ingredient laitue = new Ingredient(1,"Laitue", 2000.0, CategoryEnum.VEGETABLE);
     try {
       List<Ingredient> createdIngredientsJ =
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
