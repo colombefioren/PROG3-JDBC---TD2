@@ -8,30 +8,34 @@ public class Dish {
   private Integer id;
   private String name;
   private DishTypeEnum dishType;
-  private List<Ingredient> ingredients;
+  private List<DishIngredient> dishIngredients;
   private Double sellingPrice;
 
   public Dish() {}
 
-  public Dish(int id, String name, DishTypeEnum dishType, List<Ingredient> ingredients) {
+  public Dish(int id, String name, DishTypeEnum dishType, List<DishIngredient> dishIngredients) {
     this.id = id;
     this.name = name;
     this.dishType = dishType;
-    this.ingredients = ingredients;
+    this.dishIngredients = dishIngredients;
   }
 
-  public Dish(String name, DishTypeEnum dishType, List<Ingredient> ingredients) {
+  public Dish(String name, DishTypeEnum dishType, List<DishIngredient> dishIngredients) {
     this.name = name;
     this.dishType = dishType;
-    this.ingredients = ingredients;
+    this.dishIngredients = dishIngredients;
   }
 
   public Dish(
-      int id, String name, DishTypeEnum dishType, List<Ingredient> ingredients, Double sellingPrice) {
+      int id,
+      String name,
+      DishTypeEnum dishType,
+      List<DishIngredient> dishIngredients,
+      Double sellingPrice) {
     this.id = id;
     this.name = name;
     this.dishType = dishType;
-    this.ingredients = ingredients;
+    this.dishIngredients = dishIngredients;
     this.sellingPrice = sellingPrice;
   }
 
@@ -62,32 +66,46 @@ public class Dish {
     this.dishType = dishType;
   }
 
+  public List<DishIngredient> getDishIngredients() {
+    return dishIngredients;
+  }
+
+  public void setDishIngredients(List<DishIngredient> dishIngredients) {
+    this.dishIngredients = dishIngredients != null ? dishIngredients : new ArrayList<>();
+  }
+
+  public void addIngredient(Ingredient ingredient, Double quantity, UnitEnum unit) {
+    if (ingredient == null) return;
+
+    DishIngredient dishIngredient = new DishIngredient();
+    dishIngredient.setDish(this);
+    dishIngredient.setIngredient(ingredient);
+    dishIngredient.setQuantityRequired(quantity);
+    dishIngredient.setUnit(unit);
+
+    this.dishIngredients.add(dishIngredient);
+  }
+
   public List<Ingredient> getIngredients() {
+    List<Ingredient> ingredients = new ArrayList<>();
+    for (DishIngredient di : dishIngredients) {
+      if (di.getIngredient() != null) {
+        ingredients.add(di.getIngredient());
+      }
+    }
     return ingredients;
   }
 
-  public void setIngredients(List<Ingredient> newIngredients) {
-    if (this.ingredients != null) {
-      for (Ingredient oldIngredient : this.ingredients) {
-        if (oldIngredient != null && oldIngredient.getDish() == this) {
-          oldIngredient.setDish(null);
-        }
-      }
-    }
-    this.ingredients = newIngredients == null ? new ArrayList<>() : newIngredients;
-
-    for (Ingredient newIngredient : ingredients) {
-      if (newIngredient != null) {
-        newIngredient.setDish(this);
-      }
-    }
-  }
-
   public Double getDishCost() {
-    if (this.ingredients == null || this.ingredients.isEmpty()) {
+    if (dishIngredients == null || dishIngredients.isEmpty()) {
       return 0.0;
     }
-    return this.ingredients.stream().mapToDouble(Ingredient::getPrice).sum();
+
+    double totalCost = 0.0;
+    for (DishIngredient di : dishIngredients) {
+      totalCost += di.getCost();
+    }
+    return totalCost;
   }
 
   public Double getSellingPrice() {
@@ -118,12 +136,13 @@ public class Dish {
     return Objects.equals(id, dish.id)
         && Objects.equals(name, dish.name)
         && dishType == dish.dishType
-        && Objects.equals(ingredients, dish.ingredients);
+        && Objects.equals(dishIngredients, dish.dishIngredients)
+        && Objects.equals(sellingPrice, dish.sellingPrice);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, dishType, ingredients);
+    return Objects.hash(id, name, dishType, dishIngredients, sellingPrice);
   }
 
   @Override
@@ -137,8 +156,8 @@ public class Dish {
         + ", dishType="
         + dishType
         + ", ingredients="
-        + ingredients
-        + ", price="
+        + this.getIngredients()
+        + ", sellingPrice="
         + sellingPrice
         + '}';
   }

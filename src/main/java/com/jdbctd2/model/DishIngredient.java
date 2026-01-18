@@ -20,6 +20,13 @@ public class DishIngredient {
     this.unit = unit;
   }
 
+  public DishIngredient(Dish dish, Ingredient ingredient, Double quantityRequired, UnitEnum unit) {
+    this.dish = dish;
+    this.ingredient = ingredient;
+    this.quantityRequired = quantityRequired;
+    this.unit = unit;
+  }
+
   public Integer getId() {
     return id;
   }
