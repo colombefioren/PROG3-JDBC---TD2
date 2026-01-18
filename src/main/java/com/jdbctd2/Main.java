@@ -181,7 +181,6 @@ public class Main {
     System.out.println("savedDish : " + savedDishM);
 
     System.out.println("\n===> findDishById avec getGrossMargin <===");
-    dataRetriever.initializeDB();
 
     // dish of id=1 and price=3500
     try {
