@@ -80,7 +80,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       stmt.executeUpdate(insertDishIngSql);
       stmt.executeQuery(dishSequenceSql);
       stmt.executeQuery(ingSequenceSql);
-      stmt.executeUpdate(dishIngSequenceSql);
+      stmt.executeQuery(dishIngSequenceSql);
       con.commit();
     } catch (SQLException e) {
       try {
@@ -417,17 +417,22 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       con = dbConnection.getDBConnection();
       findIngStmt = con.prepareStatement(findIngSql);
       int paramIndex = 1;
+
       if (ingredientName != null && !ingredientName.isBlank()) {
         findIngStmt.setString(paramIndex++, "%" + ingredientName + "%");
       }
+
       if (category != null) {
         findIngStmt.setString(paramIndex++, category.name());
       }
+
       if (dishName != null && !dishName.isBlank()) {
         findIngStmt.setString(paramIndex++, "%" + dishName + "%");
       }
+
       findIngStmt.setInt(paramIndex++, size);
       findIngStmt.setInt(paramIndex++, (page - 1) * size);
+
       findIngRs = findIngStmt.executeQuery();
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
@@ -441,72 +446,46 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
   }
 
-  private List<Ingredient> findIngredientByDishId(Integer idDish) {
-    String sql =
-        """
-        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category
-        from ingredient
-        join
-        where id_dish = ?
-        """;
-
-    Connection con = null;
-    PreparedStatement preparedStatement = null;
-    ResultSet resultSet = null;
-    List<Ingredient> ingredients = new ArrayList<>();
-
-    try {
-      con = dbConnection.getDBConnection();
-      preparedStatement = con.prepareStatement(sql);
-      preparedStatement.setInt(1, idDish);
-      resultSet = preparedStatement.executeQuery();
-      while (resultSet.next()) {
-        Ingredient ingredient = new Ingredient();
-        ingredient.setId(resultSet.getInt("ing_id"));
-        ingredient.setName(resultSet.getString("ing_name"));
-        ingredient.setPrice(resultSet.getDouble("ing_price"));
-        ingredient.setCategory(CategoryEnum.valueOf(resultSet.getString("ing_category")));
-        ingredients.add(ingredient);
-      }
-      return ingredients;
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    } finally {
-      dbConnection.attemptCloseDBConnection(resultSet, preparedStatement, con);
-    }
-  }
-
   private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
-    String findIngSql =
-        """
-                select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish, d.name as dish_name
-                from Ingredient i
-                left join Dish d on i.id_dish = d.id
-                """;
+    StringBuilder sqlBuilder =
+        new StringBuilder(
+            """
+            SELECT DISTINCT i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+            FROM Ingredient i
+            """);
+
     boolean hasWhere = false;
+
     if (ingredientName != null && !ingredientName.isBlank()) {
-      findIngSql += "where i.name ilike ?";
-      hasWhere = true;
+        sqlBuilder.append(" WHERE ");
+        hasWhere = true;
+        sqlBuilder.append("i.name ILIKE ?");
     }
+
     if (category != null) {
       if (hasWhere) {
-        findIngSql += " and ";
+        sqlBuilder.append(" AND ");
       } else {
-        findIngSql += " where ";
+        sqlBuilder.append(" WHERE ");
+        hasWhere = true;
       }
-      findIngSql += "i.category = ?::category";
-      hasWhere = true;
+      sqlBuilder.append("i.category = ?::category");
     }
+
     if (dishName != null && !dishName.isBlank()) {
       if (hasWhere) {
-        findIngSql += " and ";
+        sqlBuilder.append(" AND ");
       } else {
-        findIngSql += " where ";
+        sqlBuilder.append(" WHERE ");
+        hasWhere = true;
       }
-      findIngSql += "d.name ilike ?";
+      sqlBuilder.append(
+          "EXISTS (SELECT 1 FROM dish_ingredient di JOIN Dish d ON di.id_dish = d.id WHERE di.id_ingredient = i.id AND d.name ILIKE ?)");
     }
-    findIngSql += " order by ing_id limit ? offset ?";
-    return findIngSql;
+
+    sqlBuilder.append(" ORDER BY i.id LIMIT ? OFFSET ?");
+
+    return sqlBuilder.toString();
   }
 
   private void isValid(Ingredient ingredient) {
@@ -533,7 +512,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
         throw new IllegalArgumentException("Dish id cannot be negative");
       }
     }
-    if (dish.getPrice() != null && dish.getPrice() < 0) {
+    if (dish.getSellingPrice() != null && dish.getSellingPrice() < 0) {
       throw new IllegalArgumentException("Dish price cannot be negative");
     }
   }
@@ -671,7 +650,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String deleteSql =
         String.format(
-            "DELETE FROM DishIngredient WHERE id_dish = ? AND id_ingredient NOT IN (%s)",
+            "DELETE FROM dish_ingredient WHERE id_dish = ? AND id_ingredient NOT IN (%s)",
             placeholders);
 
     try (PreparedStatement ps = con.prepareStatement(deleteSql)) {

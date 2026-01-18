@@ -13,6 +13,12 @@ public class Dish {
 
   public Dish() {}
 
+  public Dish(String name, DishTypeEnum dishType, Double sellingPrice) {
+    this.name = name;
+    this.dishType = dishType;
+    this.sellingPrice = sellingPrice;
+  }
+
   public Dish(int id, String name, DishTypeEnum dishType, List<DishIngredient> dishIngredients) {
     this.id = id;
     this.name = name;
@@ -71,12 +77,16 @@ public class Dish {
   }
 
   public void setDishIngredients(List<DishIngredient> newDishIngredients) {
-    this.dishIngredients.clear();
-
+    if (this.dishIngredients == null) {
+      this.dishIngredients = new ArrayList<>();
+    } else {
+      this.dishIngredients.clear();
+    }
     if (newDishIngredients != null) {
       for (DishIngredient di : newDishIngredients) {
         if (di != null) {
           di.setDish(this);
+          this.dishIngredients.add(di);
         }
       }
     }
