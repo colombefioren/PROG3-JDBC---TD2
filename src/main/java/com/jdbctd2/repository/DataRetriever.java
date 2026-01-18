@@ -258,7 +258,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
   public Ingredient findIngredientByName(String ingredientName) {
     String findIngByNameSql =
         """
-                select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category, i.id_dish as id_dish
+                select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
                 from ingredient i
                 where lower(i.name) = lower(?)
                 order by ing_id
@@ -291,7 +291,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
     String sql =
         """
-                        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category, ingredient.id_dish as id_dish
+                        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category
                         from ingredient
                         order by ingredient.id
                         limit ? offset ?
@@ -753,9 +753,11 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       }
     }
   }
-  private Ingredient findIngredientByNameInTransaction(Connection conn, String ingredientName) throws SQLException {
+
+  private Ingredient findIngredientByNameInTransaction(Connection conn, String ingredientName)
+      throws SQLException {
     String sql =
-            """
+        """
             SELECT i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
             FROM Ingredient i
             WHERE LOWER(i.name) = LOWER(?)
