@@ -180,9 +180,10 @@ public class Main {
     Dish savedDishM = dataRetriever.saveDish(dishM);
     System.out.println("savedDish : " + savedDishM);
 
-    System.out.println("\n===> findDishById avec getGrossMargin | 800 <===");
+    System.out.println("\n===> findDishById avec getGrossMargin <===");
+    dataRetriever.initializeDB();
 
-    // dish of id=1 and price=2000 | 2000 - 1200 = 800
+    // dish of id=1 and price=3500
     try {
       Dish dish1 = dataRetriever.findDishById(1);
       System.out.println("Dish: " + dish1.getName());
