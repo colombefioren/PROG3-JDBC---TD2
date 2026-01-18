@@ -298,7 +298,7 @@ public class Main {
                 + di.getQuantityRequired()
                 + " "
                 + di.getUnit()
-                + " (coût: "
+                + " (cost: "
                 + di.getCost()
                 + ")");
       }
