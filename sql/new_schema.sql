@@ -6,7 +6,7 @@ create table dish_ingredient
     id                serial primary key,
     id_dish           int            not null,
     id_ingredient     int            not null,
-    quantity_required numeric(10, 3) not null,
+    quantity_required numeric(10, 2) not null,
     unit              unit_type      not null,
 
     constraint fk_dish

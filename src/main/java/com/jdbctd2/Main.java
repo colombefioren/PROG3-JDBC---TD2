@@ -203,5 +203,8 @@ public class Main {
     } catch (IllegalStateException e) {
       System.out.println("Error: " + e.getMessage());
     }
+
+    // initialize the db at the end as well
+    dataRetriever.initializeDB();
   }
 }
