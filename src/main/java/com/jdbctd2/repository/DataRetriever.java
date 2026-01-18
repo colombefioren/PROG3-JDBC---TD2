@@ -457,9 +457,9 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     boolean hasWhere = false;
 
     if (ingredientName != null && !ingredientName.isBlank()) {
-        sqlBuilder.append(" WHERE ");
-        hasWhere = true;
-        sqlBuilder.append("i.name ILIKE ?");
+      sqlBuilder.append(" WHERE ");
+      hasWhere = true;
+      sqlBuilder.append("i.name ILIKE ?");
     }
 
     if (category != null) {
