@@ -23,28 +23,38 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   public void initializeDB() {
     String clearTablesSql =
         """
-                truncate table Ingredient, Dish restart identity cascade
+                truncate table Ingredient, Dish, dish_ingredient restart identity cascade
                 """;
 
     String insertDishSql =
         """
-                 INSERT INTO Dish (name, dish_type) VALUES
-                            ('Salade fraîche', 'START'),
-                            ('Poulet grillé', 'START'),
-                            ('Riz aux légumes', 'MAIN'),
-                            ('Gâteau au chocolat', 'DESSERT'),
-                            ('Salade de fruits', 'DESSERT')
+                 INSERT INTO Dish (name, dish_type, selling_price) VALUES
+                            ('Salade fraîche', 'START',3500.00),
+                            ('Poulet grillé', 'START',12000.00),
+                            ('Riz aux légumes', 'MAIN',null),
+                            ('Gâteau au chocolat', 'DESSERT',8000.00),
+                            ('Salade de fruits', 'DESSERT',null)
                 """;
 
     String insertIngredientSql =
         """
-                insert into Ingredient (name, price, category, id_dish) values
-                        ('Laitue', 800.00, 'VEGETABLE', 1),
-                        ('Tomate', 600.00, 'VEGETABLE', 1),
-                        ('Poulet', 4500.00, 'ANIMAL', 2),
-                        ('Chocolat', 3000.00, 'OTHER', 4),
-                        ('Beurre', 2500.00, 'DAIRY', 4)
+                insert into Ingredient (name, price, category) values
+                        ('Laitue', 800.00, 'VEGETABLE'),
+                        ('Tomate', 600.00, 'VEGETABLE'),
+                        ('Poulet', 4500.00, 'ANIMAL'),
+                        ('Chocolat', 3000.00, 'OTHER'),
+                        ('Beurre', 2500.00, 'DAIRY')
                 """;
+
+    String insertDishIngSql =
+"""
+insert into dish_ingredient (id_dish, id_ingredient, quantity_required, unit)
+values (1, 1, 0.20, 'KG'),
+       (1, 2, 0.15, 'KG'),
+       (2, 3, 1.00, 'KG'),
+       (4, 4, 0.30, 'KG'),
+       (4, 5, 0.20, 'KG')
+""";
 
     String dishSequenceSql =
 """
@@ -56,14 +66,9 @@ SELECT setval('dish_id_seq', (SELECT MAX(id) FROM Dish));
 SELECT setval('ingredient_id_seq', (SELECT MAX(id) FROM Ingredient));
 """;
 
-    String updatePriceSql =
+    String dishIngSequenceSql =
 """
-UPDATE Dish
-SET price = 2000.00
-WHERE id = 1; -- Salade de fromage / Salade fraiche
-UPDATE Dish
-SET price = 6000.00
-WHERE id = 2; -- Poulet grillé
+select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 """;
 
     Connection con = null;
@@ -75,9 +80,10 @@ WHERE id = 2; -- Poulet grillé
       stmt.executeUpdate(clearTablesSql);
       stmt.executeUpdate(insertDishSql);
       stmt.executeUpdate(insertIngredientSql);
+      stmt.executeUpdate(insertDishIngSql);
       stmt.executeQuery(dishSequenceSql);
       stmt.executeQuery(ingSequenceSql);
-      stmt.executeUpdate(updatePriceSql);
+      stmt.executeUpdate(dishIngSequenceSql);
       con.commit();
     } catch (SQLException e) {
       try {
