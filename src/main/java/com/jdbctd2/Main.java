@@ -88,7 +88,7 @@ public class Main {
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
     Ingredient carotte = new Ingredient("Carotte", 2000.0, CategoryEnum.VEGETABLE);
-    Ingredient laitue = new Ingredient("Laitue", 2000.0, CategoryEnum.VEGETABLE);
+    Ingredient laitue = new Ingredient(1, "Laitue", 2000.0, CategoryEnum.VEGETABLE, null);
     try {
       List<Ingredient> createdIngredientsJ =
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
@@ -138,39 +138,41 @@ public class Main {
       System.out.println("savedDish : " + savedDishM);
     }
 
-    System.out.println("\n=== Test 1: findDishById avec getGrossMargin ===");
+    System.out.println("\n===> findDishById avec getGrossMargin | 800 <===");
 
-    // test with dish with price 2000 (id=5)
+    // dish of id=1 and price=2000 | 2000 - 1200 = 800
     try {
-      Dish dish1 = dataRetriever.findDishById(2);
-      System.out.println(dish1);
-      System.out.println("Dish 1: " + dish1.getName());
-      System.out.println("Prix: " + dish1.getPrice());
-      System.out.println("Coût des ingrédients: " + dish1.getDishCost());
-      System.out.println("Marge brute: " + dish1.getGrossMargin());
+      Dish dish1 = dataRetriever.findDishById(1);
+      System.out.println("Dish: " + dish1.getName());
+      System.out.println("Price: " + dish1.getPrice());
+      System.out.println("Ingredient prices: " + dish1.getDishCost());
+      System.out.println("Gross Margin: " + dish1.getGrossMargin());
     } catch (IllegalStateException e) {
-      System.out.println("Erreur: " + e.getMessage());
+      System.out.println("Error: " + e.getMessage());
     }
 
-    // test save dish to update the price
-    System.out.println("\n=== Test 2: saveDish avec mise à jour du prix ===");
+    // savedish and update price of id=3 to be 3500
+    System.out.println("\n===> saveDish update the dish of id 3 price to 3500 <===");
 
-    // update the price of an existing dish
-    Dish dishToUpdate = dataRetriever.findDishById(2); // Riz aux légumes
+    Dish dishToUpdate = dataRetriever.findDishById(3);
+    System.out.println(dishToUpdate); // Riz aux légumes
+    System.out.println("Ancient dish price: " + dishToUpdate.getPrice());
+    try {
+      System.out.println("Gross Margin before update: " + dishToUpdate.getGrossMargin());
+    } catch (IllegalStateException e) {
+      System.out.println("Error: " + e.getMessage());
+    }
     dishToUpdate.setPrice(3500.0);
     Dish updatedDish = dataRetriever.saveDish(dishToUpdate);
-    System.out.println("Plat mis à jour: " + updatedDish.getName());
-    System.out.println("Nouveau prix: " + updatedDish.getPrice());
+    System.out.println("New dish price: " + updatedDish.getPrice());
 
-    // test the margin after the update
     try {
-      System.out.println("Marge brute après mise à jour: " + updatedDish.getGrossMargin());
+      System.out.println("Gross Margin after update: " + updatedDish.getGrossMargin());
     } catch (IllegalStateException e) {
-      System.out.println("Erreur: " + e.getMessage());
+      System.out.println("Error: " + e.getMessage());
     }
 
-    // create new dish with price
-    System.out.println("\n=== Test 3: Créer un nouveau plat avec prix ===");
+    System.out.println("\n===> saveDish create a new dish with price <===");
     Ingredient laitueIngredient = dataRetriever.findIngredientByName("laitue");
     Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
     Dish newDish =
@@ -183,26 +185,23 @@ public class Main {
     Dish savedNewDish = dataRetriever.saveDish(newDish);
     System.out.println(savedNewDish);
 
-    // test margin of that new dish
     try {
-      System.out.println("Marge brute du nouveau plat: " + savedNewDish.getGrossMargin());
+      System.out.println("Gross Margin of the new dish: " + savedNewDish.getGrossMargin());
     } catch (IllegalStateException e) {
-      System.out.println("Erreur: " + e.getMessage());
+      System.out.println("Error: " + e.getMessage());
     }
 
-    // test with dish without price
-    System.out.println("\n=== Test 4: Plat sans prix ===");
+    System.out.println("\n===> saveDish Dish without price <===");
     Dish dishWithoutPrice = new Dish("Soupe du jour", DishTypeEnum.START, new ArrayList<>());
-    // dont define price
 
     Dish savedWithoutPrice = dataRetriever.saveDish(dishWithoutPrice);
-    System.out.println("Plat sans prix créé: " + savedWithoutPrice.getName());
-    System.out.println("Prix: " + savedWithoutPrice.getPrice());
+    System.out.println("Dish: " + savedWithoutPrice.getName());
+    System.out.println("Price: " + savedWithoutPrice.getPrice());
 
     try {
-      System.out.println("Tentative de calcul de marge: " + savedWithoutPrice.getGrossMargin());
+      System.out.println("Gross Margin: " + savedWithoutPrice.getGrossMargin());
     } catch (IllegalStateException e) {
-      System.out.println("Erreur attendue: " + e.getMessage());
+      System.out.println("Error: " + e.getMessage());
     }
   }
 }

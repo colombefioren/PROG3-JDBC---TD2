@@ -95,8 +95,10 @@ public class Dish {
   }
 
   public void setPrice(Double price) {
-    if (price != null && price < 0) {
-      throw new IllegalArgumentException("Dish price cannot be negative");
+    if (price != null) {
+      if (price < 0) {
+        throw new IllegalArgumentException("Dish price cannot be negative");
+      }
     }
     this.price = price;
   }

@@ -27,16 +27,7 @@ ALTER TABLE dish
 
 UPDATE Dish
 SET price = 2000.00
-WHERE id = 1; -- Salade de fromage
+WHERE id = 1; -- Salade de fromage / Salade fraiche
 UPDATE Dish
 SET price = 6000.00
 WHERE id = 2; -- Poulet grillΘ
-UPDATE Dish
-SET price = NULL
-WHERE id = 3; -- Riz aux lΘgumes
-UPDATE Dish
-SET price = NULL
-WHERE id = 4; -- GΓteau au chocolat
-UPDATE Dish
-SET price = NULL
-WHERE id = 5; -- Salade de fruits
