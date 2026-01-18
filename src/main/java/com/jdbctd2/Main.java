@@ -85,7 +85,7 @@ public class Main {
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
     Ingredient carotte = new Ingredient("Carotte", 2000.0, CategoryEnum.VEGETABLE);
-    Ingredient laitue = new Ingredient(1,"Laitue", 2000.0, CategoryEnum.VEGETABLE);
+    Ingredient laitue = new Ingredient(1, "Laitue", 2000.0, CategoryEnum.VEGETABLE);
     try {
       List<Ingredient> createdIngredientsJ =
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
