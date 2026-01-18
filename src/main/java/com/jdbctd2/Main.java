@@ -275,7 +275,7 @@ public class Main {
     // initialize the db before the new tests
     dataRetriever.initializeDB();
 
-    System.out.println("\n=== Vérification des coûts et marges ===\n");
+    System.out.println("\n===> New test to verify costs with quantities <===\n");
 
     for (int i = 1; i <= 5; i++) {
       Dish dish = dataRetriever.findDishById(i);
