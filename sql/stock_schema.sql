@@ -1,4 +1,4 @@
-create table stock_moment
+create table stock_movement
 (
     id            serial primary key,
     id_ingredient int                                 not null,
