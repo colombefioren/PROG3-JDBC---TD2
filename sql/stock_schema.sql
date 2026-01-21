@@ -1,3 +1,5 @@
+create type movement_type as enum ('IN','OUT');
+
 create table stock_movement
 (
     id            serial primary key,

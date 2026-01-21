@@ -38,7 +38,8 @@ public class Ingredient {
     this.category = category;
   }
 
-  public Ingredient(String name, Double price, CategoryEnum category, List<StockMovement> stockMovements) {
+  public Ingredient(
+      String name, Double price, CategoryEnum category, List<StockMovement> stockMovements) {
     this.name = name;
     this.price = price;
     this.category = category;
