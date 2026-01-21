@@ -1,5 +1,6 @@
 package com.jdbctd2.model;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Ingredient {
@@ -7,8 +8,22 @@ public class Ingredient {
   private String name;
   private Double price;
   private CategoryEnum category;
+  private List<StockMovement> stockMovements;
 
   public Ingredient() {}
+
+  public Ingredient(
+      Integer id,
+      String name,
+      Double price,
+      CategoryEnum category,
+      List<StockMovement> stockMovements) {
+    this.id = id;
+    this.name = name;
+    this.price = price;
+    this.category = category;
+    this.stockMovements = stockMovements;
+  }
 
   public Ingredient(int id, String name, Double price, CategoryEnum category) {
     this.id = id;
@@ -21,6 +36,13 @@ public class Ingredient {
     this.name = name;
     this.price = price;
     this.category = category;
+  }
+
+  public Ingredient(String name, Double price, CategoryEnum category, List<StockMovement> stockMovements) {
+    this.name = name;
+    this.price = price;
+    this.category = category;
+    this.stockMovements = stockMovements;
   }
 
   public Integer getId() {
