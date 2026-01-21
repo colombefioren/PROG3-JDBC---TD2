@@ -1,5 +1,6 @@
 package com.jdbctd2.model;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -55,6 +56,28 @@ public class Ingredient {
       throw new IllegalArgumentException("Ingredient id must be positive");
     }
     this.id = id;
+  }
+
+  public List<StockMovement> getStockMovements() {
+    return stockMovements;
+  }
+
+  public void setStockMovements(List<StockMovement> stockMovements) {
+    this.stockMovements = stockMovements;
+  }
+
+  public double getStockQuantity(Instant instant) {
+    double total = 0;
+    List<StockMovement> movementsAtInstant =
+        this.stockMovements.stream().filter(sm -> sm.getDatetime().isBefore(instant)).toList();
+    for (StockMovement sm : movementsAtInstant) {
+      if (sm.getType() == MovementType.IN) {
+        total += sm.getQuantity();
+      } else {
+        total -= sm.getQuantity();
+      }
+    }
+    return total;
   }
 
   public String getName() {
