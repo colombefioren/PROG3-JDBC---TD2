@@ -1127,6 +1127,7 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
 
     try {
       con = dbConnection.getDBConnection();
+      findOrderStmt = con.prepareStatement(findOrderSql);
       findOrderStmt.setInt(1, orderId);
       rs = findOrderStmt.executeQuery();
       if (!rs.next()) {
