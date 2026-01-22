@@ -20,53 +20,53 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   public void initializeDB() {
     String clearTablesSql =
         """
-                truncate table Ingredient, Dish, dish_ingredient restart identity cascade
-                """;
+                    truncate table ingredient, dish, dish_ingredient restart identity cascade
+                    """;
 
     String insertDishSql =
         """
-                 INSERT INTO Dish (name, dish_type, selling_price) VALUES
-                            ('Salade fraîche', 'START',3500.00),
-                            ('Poulet grillé', 'START',12000.00),
-                            ('Riz aux légumes', 'MAIN',null),
-                            ('Gâteau au chocolat', 'DESSERT',8000.00),
-                            ('Salade de fruits', 'DESSERT',null)
-                """;
+                     insert into dish (name, dish_type, selling_price) values
+                                ('Salade fraîche', 'START',3500.00),
+                                ('Poulet grillé', 'START',12000.00),
+                                ('Riz aux légumes', 'MAIN',null),
+                                ('Gâteau au chocolat', 'DESSERT',8000.00),
+                                ('Salade de fruits', 'DESSERT',null)
+                    """;
 
     String insertIngredientSql =
         """
-                insert into Ingredient (name, price, category) values
-                        ('Laitue', 800.00, 'VEGETABLE'),
-                        ('Tomate', 600.00, 'VEGETABLE'),
-                        ('Poulet', 4500.00, 'ANIMAL'),
-                        ('Chocolat', 3000.00, 'OTHER'),
-                        ('Beurre', 2500.00, 'DAIRY')
-                """;
+                    insert into ingredient (name, price, category) values
+                            ('Laitue', 800.00, 'VEGETABLE'),
+                            ('Tomate', 600.00, 'VEGETABLE'),
+                            ('Poulet', 4500.00, 'ANIMAL'),
+                            ('Chocolat', 3000.00, 'OTHER'),
+                            ('Beurre', 2500.00, 'DAIRY')
+                    """;
 
     String insertDishIngSql =
-"""
-insert into dish_ingredient (id_dish, id_ingredient, quantity_required, unit)
-values (1, 1, 0.20, 'KG'),
-       (1, 2, 0.15, 'KG'),
-       (2, 3, 1.00, 'KG'),
-       (4, 4, 0.30, 'KG'),
-       (4, 5, 0.20, 'KG')
-""";
+        """
+                    insert into dish_ingredient (id_dish, id_ingredient, quantity_required, unit)
+                    values (1, 1, 0.20, 'KG'),
+                           (1, 2, 0.15, 'KG'),
+                           (2, 3, 1.00, 'KG'),
+                           (4, 4, 0.30, 'KG'),
+                           (4, 5, 0.20, 'KG')
+                    """;
 
     String dishSequenceSql =
-"""
-SELECT setval('dish_id_seq', (SELECT MAX(id) FROM Dish));
-""";
+        """
+                    select setval('dish_id_seq', (select max(id) from dish));
+                    """;
 
     String ingSequenceSql =
-"""
-SELECT setval('ingredient_id_seq', (SELECT MAX(id) FROM Ingredient));
-""";
+        """
+                    select setval('ingredient_id_seq', (select max(id) from ingredient));
+                    """;
 
     String dishIngSequenceSql =
-"""
-select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
-""";
+        """
+                    select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
+                    """;
 
     Connection con = null;
     Statement stmt = null;
@@ -110,11 +110,11 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
     String dishSql =
         """
-                            select d.id as dish_id, d.name as dish_name, d.dish_type, d.selling_price as dish_price
-                            from Dish d
-                            where d.id = ?
-                            order by dish_id
-                           """;
+                                select d.id as dish_id, d.name as dish_name, d.dish_type, d.selling_price as dish_price
+                                from dish d
+                                where d.id = ?
+                                order by dish_id
+                               """;
 
     Connection con = null;
     PreparedStatement dishStmt = null;
@@ -129,12 +129,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
         throw new RuntimeException("Dish with ID " + id + " not found");
       }
 
-      Dish dish = new Dish();
-      dish.setId(dishRs.getInt("dish_id"));
-      dish.setName(dishRs.getString("dish_name"));
-      dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
-      dish.setSellingPrice(
-          dishRs.getObject("dish_price") == null ? null : dishRs.getDouble("dish_price"));
+      Dish dish = mapResultSetToDish(dishRs);
       dish.setDishIngredients(findDishIngredientsByDishId(id));
       return dish;
     } catch (SQLException e) {
@@ -153,14 +148,14 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String upsertDishSql =
         """
-                            INSERT INTO dish (id, name, dish_type,selling_price)
-                            VALUES (?, ?, ?::dish_type,?)
-                            ON CONFLICT (id) DO UPDATE
-                            SET name = EXCLUDED.name,
-                                dish_type = EXCLUDED.dish_type,
-                                selling_price = EXCLUDED.selling_price
-                            RETURNING id
-                        """;
+                                insert into dish (id, name, dish_type,selling_price)
+                                values (?, ?, ?::dish_type,?)
+                                on conflict (id) do update
+                                set name = excluded.name,
+                                    dish_type = excluded.dish_type,
+                                    selling_price = excluded.selling_price
+                                returning id
+                            """;
 
     Connection con = null;
     PreparedStatement upsertDishStmt = null;
@@ -226,12 +221,12 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
   public List<Dish> findDishesByIngredientName(String IngredientName) {
     String findIngSql =
         """
-                    select distinct d.id as dish_id
-                    from Dish d
-                    join dish_ingredient di on d.id = di.id_dish
-                    join ingredient i on di.id_ingredient = i.id
-                    where i.name ilike ?
-                """;
+                        select distinct d.id as dish_id
+                        from dish d
+                        join dish_ingredient di on d.id = di.id_dish
+                        join ingredient i on di.id_ingredient = i.id
+                        where i.name ilike ?
+                    """;
 
     Connection con = null;
     PreparedStatement findIngSmt = null;
@@ -258,11 +253,11 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
   public Ingredient findIngredientByName(String ingredientName) {
     String findIngByNameSql =
         """
-                select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
-                from ingredient i
-                where lower(i.name) = lower(?)
-                order by ing_id
-                """;
+                    select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+                    from ingredient i
+                    where lower(i.name) = lower(?)
+                    order by ing_id
+                    """;
 
     Connection con = null;
     PreparedStatement findIngByNameStmt = null;
@@ -291,11 +286,11 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
     String sql =
         """
-                        select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category
-                        from ingredient
-                        order by ingredient.id
-                        limit ? offset ?
-                """;
+                            select ingredient.id as ing_id, ingredient.name as ing_name, ingredient.price as ing_price, ingredient.category as ing_category
+                            from ingredient
+                            order by ingredient.id
+                            limit ? offset ?
+                    """;
     int offset = (page - 1) * size;
     Connection con = null;
     PreparedStatement ingredientStmt = null;
@@ -342,10 +337,10 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String insertSql =
         """
-                                        INSERT INTO ingredient (id, name, category, price)
-                                        VALUES (?, ?, ?::category, ?)
-                                        RETURNING id
-                                    """;
+                                            insert into ingredient (id, name, category, price)
+                                            values (?, ?, ?::category, ?)
+                                            returning id
+                                        """;
 
     Connection con = null;
     PreparedStatement insertStmt = null;
@@ -450,23 +445,23 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     StringBuilder sqlBuilder =
         new StringBuilder(
             """
-            SELECT DISTINCT i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
-            FROM Ingredient i
-            """);
+                    select distinct i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+                    from ingredient i
+                    """);
 
     boolean hasWhere = false;
 
     if (ingredientName != null && !ingredientName.isBlank()) {
-      sqlBuilder.append(" WHERE ");
+      sqlBuilder.append(" where ");
       hasWhere = true;
-      sqlBuilder.append("i.name ILIKE ?");
+      sqlBuilder.append("i.name ilike ?");
     }
 
     if (category != null) {
       if (hasWhere) {
-        sqlBuilder.append(" AND ");
+        sqlBuilder.append(" and ");
       } else {
-        sqlBuilder.append(" WHERE ");
+        sqlBuilder.append(" where ");
         hasWhere = true;
       }
       sqlBuilder.append("i.category = ?::category");
@@ -474,16 +469,16 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     if (dishName != null && !dishName.isBlank()) {
       if (hasWhere) {
-        sqlBuilder.append(" AND ");
+        sqlBuilder.append(" and ");
       } else {
-        sqlBuilder.append(" WHERE ");
+        sqlBuilder.append(" where ");
         hasWhere = true;
       }
       sqlBuilder.append(
-          "EXISTS (SELECT 1 FROM dish_ingredient di JOIN Dish d ON di.id_dish = d.id WHERE di.id_ingredient = i.id AND d.name ILIKE ?)");
+          "exists (select 1 from dish_ingredient di join dish d on di.id_dish = d.id where di.id_ingredient = i.id and d.name ilike ?)");
     }
 
-    sqlBuilder.append(" ORDER BY i.id LIMIT ? OFFSET ?");
+    sqlBuilder.append(" order by i.id limit ? offset ?");
 
     return sqlBuilder.toString();
   }
@@ -526,9 +521,34 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     return ingredient;
   }
 
+  private Dish mapResultSetToDish(ResultSet rs) throws SQLException {
+    Dish dish = new Dish();
+    dish.setId(rs.getInt("dish_id"));
+    dish.setName(rs.getString("dish_name"));
+    dish.setDishType(DishTypeEnum.valueOf(rs.getString("dish_type")));
+    dish.setSellingPrice(rs.getObject("dish_price") == null ? null : rs.getDouble("dish_price"));
+    return dish;
+  }
+
+  private DishIngredient mapResultSetToDishIngredient(ResultSet rs) throws SQLException {
+    DishIngredient dishIngredient = new DishIngredient();
+    dishIngredient.setId(rs.getInt("di_id"));
+    dishIngredient.setQuantityRequired(rs.getDouble("quantity_required"));
+    dishIngredient.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+
+    Ingredient ingredient = new Ingredient();
+    ingredient.setId(rs.getInt("ing_id"));
+    ingredient.setName(rs.getString("ing_name"));
+    ingredient.setPrice(rs.getDouble("ing_price"));
+    ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
+    dishIngredient.setIngredient(ingredient);
+
+    return dishIngredient;
+  }
+
   private String getSerialSequenceName(Connection conn, String tableName, String columnName)
       throws SQLException {
-    String sql = "SELECT pg_get_serial_sequence(?, ?)";
+    String sql = "select pg_get_serial_sequence(?, ?)";
     try (PreparedStatement ps = conn.prepareStatement(sql)) {
       ps.setString(1, tableName);
       ps.setString(2, columnName);
@@ -549,7 +569,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
     }
     updateSequenceNextValue(conn, tableName, columnName, sequenceName);
 
-    String nextValSql = "SELECT nextval(?)";
+    String nextValSql = "select nextval(?)";
     try (PreparedStatement ps = conn.prepareStatement(nextValSql)) {
       ps.setString(1, sequenceName);
       try (ResultSet rs = ps.executeQuery()) {
@@ -564,7 +584,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       throws SQLException {
     String setValSql =
         String.format(
-            "SELECT setval('%s', (SELECT COALESCE(MAX(%s), 0) FROM %s))",
+            "select setval('%s', (select coalesce(max(%s), 0) from %s))",
             sequenceName, columnName, tableName);
     try (PreparedStatement ps = conn.prepareStatement(setValSql)) {
       ps.executeQuery();
@@ -573,14 +593,14 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
   private List<DishIngredient> findDishIngredientsByDishId(Integer dishId) {
     String sql =
-"""
-  select di.id as di_id, di.quantity_required, di.unit,
-  i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
-  from dish_ingredient di
-  join ingredient i on di.id_ingredient = i.id
-  where di.id_dish = ?
-  order by di_id
-""";
+        """
+              select di.id as di_id, di.quantity_required, di.unit,
+              i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+              from dish_ingredient di
+              join ingredient i on di.id_ingredient = i.id
+              where di.id_dish = ?
+              order by di_id
+            """;
 
     Connection con = null;
     PreparedStatement pstmt = null;
@@ -594,18 +614,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
       List<DishIngredient> dishIngredients = new ArrayList<>();
       while (rs.next()) {
-        DishIngredient dishIngredient = new DishIngredient();
-        dishIngredient.setId(rs.getInt("di_id"));
-        dishIngredient.setQuantityRequired(rs.getDouble("quantity_required"));
-        dishIngredient.setUnit(UnitEnum.valueOf(rs.getString("unit")));
-
-        Ingredient ingredient = new Ingredient();
-        ingredient.setId(rs.getInt("ing_id"));
-        ingredient.setName(rs.getString("ing_name"));
-        ingredient.setPrice(rs.getDouble("ing_price"));
-        ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
-        dishIngredient.setIngredient(ingredient);
-        dishIngredients.add(dishIngredient);
+        dishIngredients.add(mapResultSetToDishIngredient(rs));
       }
 
       return dishIngredients;
@@ -622,7 +631,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     if (newDishIngredients == null || newDishIngredients.isEmpty()) {
       try (PreparedStatement ps =
-          con.prepareStatement("DELETE FROM dish_ingredient WHERE id_dish = ?")) {
+          con.prepareStatement("delete from dish_ingredient where id_dish = ?")) {
         ps.setInt(1, dishId);
         ps.executeUpdate();
       }
@@ -639,7 +648,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     if (newIngredientIds.isEmpty()) {
       try (PreparedStatement ps =
-          con.prepareStatement("DELETE FROM dish_ingredient WHERE id_dish = ?")) {
+          con.prepareStatement("delete from dish_ingredient where id_dish = ?")) {
         ps.setInt(1, dishId);
         ps.executeUpdate();
       }
@@ -650,7 +659,7 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String deleteSql =
         String.format(
-            "DELETE FROM dish_ingredient WHERE id_dish = ? AND id_ingredient NOT IN (%s)",
+            "delete from dish_ingredient where id_dish = ? and id_ingredient not in (%s)",
             placeholders);
 
     try (PreparedStatement ps = con.prepareStatement(deleteSql)) {
@@ -673,12 +682,12 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String upsertSql =
         """
-            INSERT INTO dish_ingredient (id_dish, id_ingredient, quantity_required, unit)
-            VALUES (?, ?, ?, ?::unit_type)
-            ON CONFLICT (id_dish, id_ingredient) DO UPDATE
-            SET quantity_required = EXCLUDED.quantity_required,
-                unit = EXCLUDED.unit
-            """;
+                insert into dish_ingredient (id_dish, id_ingredient, quantity_required, unit)
+                values (?, ?, ?, ?::unit_type)
+                on conflict (id_dish, id_ingredient) do update
+                set quantity_required = excluded.quantity_required,
+                    unit = excluded.unit
+                """;
 
     try (PreparedStatement ps = conn.prepareStatement(upsertSql)) {
       for (DishIngredient dishIngredient : newDishIngredients) {
@@ -712,10 +721,10 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
 
     String insertSql =
         """
-            INSERT INTO Ingredient (name, price, category)
-            VALUES (?, ?, ?::category)
-            RETURNING id
-            """;
+                insert into ingredient (name, price, category)
+                values (?, ?, ?::category)
+                returning id
+                """;
 
     try (PreparedStatement stmt = conn.prepareStatement(insertSql)) {
       stmt.setString(1, ingredient.getName());
@@ -737,21 +746,16 @@ select setval('dishingredient_id_seq', (select max(id) from dish_ingredient));
       throws SQLException {
     String sql =
         """
-            SELECT i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
-            FROM Ingredient i
-            WHERE LOWER(i.name) = LOWER(?)
-            """;
+                select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+                from ingredient i
+                where lower(i.name) = lower(?)
+                """;
 
     try (PreparedStatement stmt = conn.prepareStatement(sql)) {
       stmt.setString(1, ingredientName);
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
-          Ingredient ingredient = new Ingredient();
-          ingredient.setId(rs.getInt("ing_id"));
-          ingredient.setName(rs.getString("ing_name"));
-          ingredient.setPrice(rs.getDouble("ing_price"));
-          ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
-          return ingredient;
+          return mapResultSetToIngredient(rs);
         }
       }
     }
