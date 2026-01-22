@@ -135,6 +135,8 @@ public class Dish {
     return this.sellingPrice - cost;
   }
 
+  public Double getStockValue
+
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
