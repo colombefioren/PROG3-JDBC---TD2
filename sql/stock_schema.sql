@@ -4,7 +4,7 @@ create table stock_movement
 (
     id                serial primary key,
     id_ingredient     int                                 not null,
-    quantity          int                                 not null,
+    quantity          numeric(10, 2)                      not null,
     unit              unit_type                           not null,
     creation_datetime timestamp default current_timestamp not null,
     type              movement_type                       not null,
