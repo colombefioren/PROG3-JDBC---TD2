@@ -1173,7 +1173,7 @@ select do.id, do.quantity, do.id_dish from dish_order do where do.id_order = ?
     for (DishOrder dishOrder : order.getDishOrders()) {
       Dish dish = dishOrder.getDish();
       for (DishIngredient dishIngredient : dish.getDishIngredients()) {
-        if (dishIngredient.getQuantityRequired()
+        if (dishIngredient.getQuantityRequired() * dishOrder.getQuantity()
             < dishIngredient.getIngredient().getStockValueAt(Instant.now()).getQuantity()) {
           return false;
         } else {
