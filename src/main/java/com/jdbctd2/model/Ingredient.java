@@ -1,6 +1,5 @@
 package com.jdbctd2.model;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -9,7 +8,7 @@ public class Ingredient {
   private String name;
   private Double price;
   private CategoryEnum category;
-  private List<StockMovement> stockMovements;
+  private List<StockMovement> stockMovementList;
 
   public Ingredient() {}
 
@@ -23,7 +22,7 @@ public class Ingredient {
     this.name = name;
     this.price = price;
     this.category = category;
-    this.stockMovements = stockMovements;
+    this.stockMovementList = stockMovements;
   }
 
   public Ingredient(int id, String name, Double price, CategoryEnum category) {
@@ -44,7 +43,7 @@ public class Ingredient {
     this.name = name;
     this.price = price;
     this.category = category;
-    this.stockMovements = stockMovements;
+    this.stockMovementList = stockMovements;
   }
 
   public Integer getId() {
@@ -59,25 +58,11 @@ public class Ingredient {
   }
 
   public List<StockMovement> getStockMovements() {
-    return stockMovements;
+    return stockMovementList;
   }
 
   public void setStockMovements(List<StockMovement> stockMovements) {
-    this.stockMovements = stockMovements;
-  }
-
-  public double getStockQuantity(Instant instant) {
-    double total = 0;
-    List<StockMovement> movementsAtInstant =
-        this.stockMovements.stream().filter(sm -> sm.getDatetime().isBefore(instant)).toList();
-    for (StockMovement sm : movementsAtInstant) {
-      if (sm.getType() == MovementType.IN) {
-        total += sm.getQuantity();
-      } else {
-        total -= sm.getQuantity();
-      }
-    }
-    return total;
+    this.stockMovementList = stockMovements;
   }
 
   public String getName() {

@@ -5,18 +5,18 @@ import java.util.Objects;
 
 public class StockMovement {
   private Integer id;
-  private int quantity;
-  private UnitEnum unit;
-  private Instant datetime;
-  private MovementType type;
+  private StockValue value;
+  private MovementTypeEnum type;
+  private Instant creationDatetime;
+
+  public StockMovement() {}
 
   public StockMovement(
-      Integer id, int quantity, UnitEnum unit, Instant datetime, MovementType type) {
+      Integer id, StockValue value, MovementTypeEnum type, Instant creationDatetime) {
     this.id = id;
-    this.quantity = quantity;
-    this.unit = unit;
-    this.datetime = datetime;
+    this.value = value;
     this.type = type;
+    this.creationDatetime = creationDatetime;
   }
 
   public Integer getId() {
@@ -27,53 +27,43 @@ public class StockMovement {
     this.id = id;
   }
 
-  public int getQuantity() {
-    return quantity;
+  public StockValue getValue() {
+    return value;
   }
 
-  public void setQuantity(int quantity) {
-    this.quantity = quantity;
+  public void setValue(StockValue value) {
+    this.value = value;
   }
 
-  public UnitEnum getUnit() {
-    return unit;
-  }
-
-  public void setUnit(UnitEnum unit) {
-    this.unit = unit;
-  }
-
-  public Instant getDatetime() {
-    return datetime;
-  }
-
-  public void setDatetime(Instant datetime) {
-    this.datetime = datetime;
-  }
-
-  public MovementType getType() {
+  public MovementTypeEnum getType() {
     return type;
   }
 
-  public void setType(MovementType type) {
+  public void setType(MovementTypeEnum type) {
     this.type = type;
+  }
+
+  public Instant getCreationDatetime() {
+    return creationDatetime;
+  }
+
+  public void setCreationDatetime(Instant creationDatetime) {
+    this.creationDatetime = creationDatetime;
   }
 
   @Override
   public boolean equals(Object o) {
-
     if (o == null || getClass() != o.getClass()) return false;
     StockMovement that = (StockMovement) o;
-    return quantity == that.quantity
-        && Objects.equals(id, that.id)
-        && unit == that.unit
-        && Objects.equals(datetime, that.datetime)
-        && type == that.type;
+    return Objects.equals(id, that.id)
+        && Objects.equals(value, that.value)
+        && type == that.type
+        && Objects.equals(creationDatetime, that.creationDatetime);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, quantity, unit, datetime, type);
+    return Objects.hash(id, value, type, creationDatetime);
   }
 
   @Override
@@ -81,14 +71,12 @@ public class StockMovement {
     return "StockMovement{"
         + "id="
         + id
-        + ", quantity="
-        + quantity
-        + ", unit="
-        + unit
-        + ", datetime="
-        + datetime
+        + ", value="
+        + value
         + ", type="
         + type
+        + ", creationDatetime="
+        + creationDatetime
         + '}';
   }
 }

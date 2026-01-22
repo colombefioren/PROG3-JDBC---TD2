@@ -1,6 +1,6 @@
 package com.jdbctd2.model;
 
-public enum MovementType {
+public enum MovementTypeEnum {
   IN,
   OUT
 }
