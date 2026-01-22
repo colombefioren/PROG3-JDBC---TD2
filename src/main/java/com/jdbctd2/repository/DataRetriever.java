@@ -600,7 +600,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         throw new RuntimeException("Ingredient with ID " + id + " not found");
       }
 
-        return mapResultSetToIngredient(rs);
+      return mapResultSetToIngredient(rs);
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to retrieve ingredient with id " + id, e);
     } finally {

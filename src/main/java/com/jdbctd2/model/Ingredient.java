@@ -1,5 +1,6 @@
 package com.jdbctd2.model;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
 
@@ -95,19 +96,53 @@ public class Ingredient {
     this.category = category;
   }
 
+  public StockValue getStockValueAt(Instant t) {
+    if (stockMovementList == null || stockMovementList.isEmpty()) {
+      StockValue emptyStock = new StockValue();
+      emptyStock.setQuantity(0.0);
+      emptyStock.setUnit(UnitEnum.KG);
+      return emptyStock;
+    }
+    double total = 0.0;
+    StockValue stockValue = new StockValue();
+    List<StockMovement> stockMovements =
+        this.getStockMovements().stream()
+            .filter(
+                stockMovement ->
+                    stockMovement.getCreationDatetime().isBefore(t)
+                        || stockMovement.getCreationDatetime().equals(t))
+            .toList();
+
+    for (StockMovement stockMovement : stockMovements) {
+
+      if (stockMovement.getType() == MovementTypeEnum.IN) {
+        total += stockMovement.getValue().getQuantity();
+      } else if (stockMovement.getType() == MovementTypeEnum.OUT) {
+        total -= stockMovement.getValue().getQuantity();
+      }
+    }
+
+    stockValue.setQuantity(total);
+    stockValue.setUnit(UnitEnum.KG);
+
+    return stockValue;
+  }
+
   @Override
   public boolean equals(Object o) {
+
     if (o == null || getClass() != o.getClass()) return false;
     Ingredient that = (Ingredient) o;
     return Objects.equals(id, that.id)
         && Objects.equals(name, that.name)
         && Objects.equals(price, that.price)
-        && category == that.category;
+        && category == that.category
+        && Objects.equals(stockMovementList, that.stockMovementList);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, price, category);
+    return Objects.hash(id, name, price, category, stockMovementList);
   }
 
   @Override
@@ -122,6 +157,8 @@ public class Ingredient {
         + price
         + ", category="
         + category
+        + ", stockMovementList="
+        + stockMovementList
         + '}';
   }
 }
