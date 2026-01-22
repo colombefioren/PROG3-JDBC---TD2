@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class DataRetriever implements IngredientRepository, DishRepository {
+public class DataRetriever implements IngredientRepository, DishRepository, OrderRepository {
 
   private final DBConnection dbConnection;
 
@@ -597,6 +597,62 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
     }
   }
 
+  private List<StockMovement> saveStockMovement(
+      StockMovement stockMovementToSave, Integer ingredientId) {
+    if (stockMovementToSave == null) {
+      throw new IllegalArgumentException("Stock movement cannot be null");
+    }
+
+    String insertStockMovementSql =
+        """
+                    insert into stock_movement (id, id_ingredient, quantity, unit, creation_datetime, type)
+                    values (?, ?, ?, ?::unit_type, ?, ?::movement_type)
+                    on conflict (id) do nothing
+                    returning id
+                    """;
+
+    Connection con = null;
+    PreparedStatement insertStockMovementStmt = null;
+    ResultSet insertStockMovementRs = null;
+
+    try {
+      insertStockMovementStmt = con.prepareStatement(insertStockMovementSql);
+
+      if (stockMovementToSave.getId() != null) {
+        insertStockMovementStmt.setInt(1, stockMovementToSave.getId());
+      } else {
+        insertStockMovementStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
+      }
+
+      insertStockMovementStmt.setInt(2, ingredientId);
+      insertStockMovementStmt.setDouble(3, stockMovementToSave.getValue().getQuantity());
+      insertStockMovementStmt.setString(4, stockMovementToSave.getValue().getUnit().name());
+
+      if (stockMovementToSave.getCreationDatetime() != null) {
+        insertStockMovementStmt.setTimestamp(
+            5, Timestamp.from(stockMovementToSave.getCreationDatetime()));
+      } else {
+        insertStockMovementStmt.setTimestamp(5, Timestamp.from(Instant.now()));
+      }
+
+      insertStockMovementStmt.setString(6, stockMovementToSave.getType().name());
+
+      insertStockMovementStmt.executeQuery();
+
+      return findStockMovementsByIngredientId(ingredientId);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      if (insertStockMovementStmt != null) {
+        try {
+          insertStockMovementStmt.close();
+        } catch (SQLException e) {
+          System.err.println("Could not close statement: " + e);
+        }
+      }
+    }
+  }
+
   private Ingredient findIngredientById(Integer id) {
     if (id == null || id <= 0) {
       throw new IllegalArgumentException("Ingredient id must be positive");
@@ -1004,5 +1060,84 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
       }
     }
     return null;
+  }
+
+  @Override
+  public Order saveOrder(Order orderToSave) {
+
+    if(!isStockEnough(orderToSave)){
+      throw new IllegalArgumentException("Not enough stock");
+    }
+
+    String saveOrderSql =
+"""
+    insert into "order" (reference, creation_datetime)
+    values (?,?)
+    returning id
+""";
+
+    String saveDishOrderSql =
+"""
+    insert into dish_order (id_order, id_dish, quantity)
+    values (?,?,?)
+    returning id
+""";
+
+    Connection con = null;
+    PreparedStatement saveOrderStmt = null;
+    PreparedStatement saveDishOrderStmt = null;
+    Integer orderId = null;
+    List<Integer> dishOrderIds = new ArrayList<>();
+
+    try {
+      con = dbConnection.getDBConnection();
+      saveOrderStmt = con.prepareStatement(saveOrderSql);
+      saveDishOrderStmt = con.prepareStatement(saveDishOrderSql);
+
+      saveOrderStmt.setString(1, orderToSave.getReference());
+      saveOrderStmt.setTimestamp(2, Timestamp.from(orderToSave.getCreationDatetime()));
+      orderId = saveOrderStmt.executeUpdate();
+
+      for(DishOrder dishOrder : orderToSave.getDishOrders()){
+        saveDishOrderStmt.setInt(1, orderId);
+        saveDishOrderStmt.setInt(2, dishOrder.getDish().getId());
+        saveDishOrderStmt.setInt(3, dishOrder.getQuantity());
+        dishOrderIds.add(saveOrderStmt.executeUpdate());
+      }
+
+
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  @Override
+  public Order findOrderByReference(String reference) {
+    return null;
+  }
+
+  public boolean isStockEnough(Order order) {
+
+    for (DishOrder dishOrder : order.getDishOrders()) {
+      Dish dish = dishOrder.getDish();
+      for (DishIngredient dishIngredient : dish.getDishIngredients()) {
+        if (dishIngredient.getQuantityRequired()
+            < dishIngredient.getIngredient().getStockValueAt(Instant.now()).getQuantity()) {
+          return false;
+        } else {
+          StockMovement stockMovement = new StockMovement();
+          stockMovement.setType(MovementTypeEnum.OUT);
+          StockValue stockValue = new StockValue();
+          stockValue.setQuantity(dishIngredient.getQuantityRequired());
+          stockValue.setUnit(dishIngredient.getUnit());
+          stockMovement.setValue(stockValue);
+          stockMovement.setCreationDatetime(Instant.now());
+          List<StockMovement> movements =
+              saveStockMovement(stockMovement, dishIngredient.getIngredient().getId());
+          dishIngredient.getIngredient().setStockMovements(movements);
+        }
+      }
+    }
+    return true;
   }
 }
