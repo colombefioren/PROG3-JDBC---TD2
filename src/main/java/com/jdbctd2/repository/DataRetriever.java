@@ -1064,6 +1064,9 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
 
   @Override
   public Order saveOrder(Order orderToSave) {
+    if (orderToSave == null) {
+      throw new IllegalArgumentException("Order to save cannot be null");
+    }
 
     if (!isStockEnough(orderToSave)) {
       throw new IllegalArgumentException("Not enough stock");
@@ -1086,28 +1089,52 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
     Connection con = null;
     PreparedStatement saveOrderStmt = null;
     PreparedStatement saveDishOrderStmt = null;
-    Integer orderId = null;
+    ResultSet orderRs = null;
     List<Integer> dishOrderIds = new ArrayList<>();
 
     try {
       con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
       saveOrderStmt = con.prepareStatement(saveOrderSql);
       saveDishOrderStmt = con.prepareStatement(saveDishOrderSql);
 
       saveOrderStmt.setString(1, orderToSave.getReference());
       saveOrderStmt.setTimestamp(2, Timestamp.from(orderToSave.getCreationDatetime()));
-      orderId = saveOrderStmt.executeUpdate();
+      orderRs = saveOrderStmt.executeQuery();
+
+      if (!orderRs.next()) {
+        throw new RuntimeException("Error while saving order");
+      }
+      int orderId = orderRs.getInt(1);
 
       for (DishOrder dishOrder : orderToSave.getDishOrders()) {
         saveDishOrderStmt.setInt(1, orderId);
         saveDishOrderStmt.setInt(2, dishOrder.getDish().getId());
         saveDishOrderStmt.setInt(3, dishOrder.getQuantity());
-        dishOrderIds.add(saveOrderStmt.executeUpdate());
+        saveOrderStmt.addBatch();
       }
-
+      saveOrderStmt.executeBatch();
+      updateStock(con, orderToSave);
+      con.commit();
       return findOrderById(orderId);
     } catch (SQLException e) {
-      throw new RuntimeException(e);
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+      throw new RuntimeException("Failed to save order: " + e.getMessage(), e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.err.println("Could not reset auto-commit: " + e);
+      }
+      dbConnection.attemptCloseDBConnection(orderRs, saveOrderStmt, saveDishOrderStmt, con);
     }
   }
 
@@ -1118,7 +1145,7 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
 
     String findOrderSql =
 """
-     select o.id, o.reference, o.creation_datetime from "order" o where o.id = ?
+     select o.id as o_id, o.reference as o_reference, o.creation_datetime as o_datetime from "order" o where o.id = ?
 """;
 
     Connection con = null;
@@ -1140,13 +1167,28 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
       return order;
     } catch (SQLException e) {
       throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, findOrderStmt, con);
     }
+  }
+
+  private Order mapResultSetToOrder(ResultSet rs) throws SQLException {
+    Order order = new Order();
+    order.setId(rs.getInt("o_id"));
+    order.setReference(rs.getString("o_reference"));
+
+    Timestamp timestamp = rs.getTimestamp("o_datetime");
+    if (timestamp != null) {
+      order.setCreationDatetime(timestamp.toInstant());
+    }
+
+    return order;
   }
 
   public List<DishOrder> findDishOrdersByOrderId(Integer orderId) {
     String findDishOrdersSql =
 """
-select do.id, do.quantity, do.id_dish from dish_order do where do.id_order = ?
+select disho.id as do_id, disho.quantity as di_quantity, disho.id_dish from dish_order disho where do.id_order = ?
 """;
 
     Connection con = null;
@@ -1155,13 +1197,27 @@ select do.id, do.quantity, do.id_dish from dish_order do where do.id_order = ?
 
     try {
       con = dbConnection.getDBConnection();
+      findDishOrdersStmt = con.prepareStatement(findDishOrdersSql);
       findDishOrdersStmt.setInt(1, orderId);
       rs = findDishOrdersStmt.executeQuery();
-
-      return mapResultSetToDishOrder(rs);
+      List<DishOrder> dishOrders = new ArrayList<>();
+      while (rs.next()) {
+        dishOrders.add(mapResultSetToDishOrder(rs));
+      }
+      return dishOrders;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  private DishOrder mapResultSetToDishOrder(ResultSet rs) throws SQLException {
+    DishOrder dishOrder = new DishOrder();
+    dishOrder.setId(rs.getInt("do_id"));
+    dishOrder.setDish(findDishById(rs.getInt("id_dish")));
+
+    dishOrder.setQuantity(rs.getInt("do_quantity"));
+
+    return dishOrder;
   }
 
   @Override
@@ -1172,25 +1228,40 @@ select do.id, do.quantity, do.id_dish from dish_order do where do.id_order = ?
   public boolean isStockEnough(Order order) {
 
     for (DishOrder dishOrder : order.getDishOrders()) {
-      Dish dish = dishOrder.getDish();
+      Dish dish = findDishById(dishOrder.getDish().getId());
       for (DishIngredient dishIngredient : dish.getDishIngredients()) {
         if (dishIngredient.getQuantityRequired() * dishOrder.getQuantity()
-            < dishIngredient.getIngredient().getStockValueAt(Instant.now()).getQuantity()) {
+            > dishIngredient.getIngredient().getStockValueAt(Instant.now()).getQuantity()) {
           return false;
-        } else {
-          StockMovement stockMovement = new StockMovement();
-          stockMovement.setType(MovementTypeEnum.OUT);
-          StockValue stockValue = new StockValue();
-          stockValue.setQuantity(dishIngredient.getQuantityRequired());
-          stockValue.setUnit(dishIngredient.getUnit());
-          stockMovement.setValue(stockValue);
-          stockMovement.setCreationDatetime(Instant.now());
-          List<StockMovement> movements =
-              saveStockMovement(stockMovement, dishIngredient.getIngredient().getId());
-          dishIngredient.getIngredient().setStockMovements(movements);
         }
       }
     }
     return true;
+  }
+
+  private void updateStock(Connection con, Order orderToSave) {
+    String insertStockMovementSql = """
+        insert into stock_movement (id_ingredient, quantity, unit, creation_datetime, type)
+        values (?, ?, ?::unit_type, ?, 'OUT')
+        """;
+
+    try (PreparedStatement ps = con.prepareStatement(insertStockMovementSql)) {
+      for (DishOrder dishOrder : orderToSave.getDishOrders()) {
+        Dish dish = findDishById(dishOrder.getDish().getId());
+
+        for (DishIngredient dishIngredient : dish.getDishIngredients()) {
+          double quantityToDeduct = dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
+
+          ps.setInt(1, dishIngredient.getIngredient().getId());
+          ps.setDouble(2, quantityToDeduct);
+          ps.setString(3, dishIngredient.getUnit().name());
+          ps.setTimestamp(4, Timestamp.from(Instant.now()));
+          ps.addBatch();
+        }
+      }
+      ps.executeBatch();
+    } catch (SQLException e) {
+        throw new RuntimeException(e);
+    }
   }
 }
