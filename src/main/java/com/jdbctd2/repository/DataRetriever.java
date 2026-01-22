@@ -1222,7 +1222,42 @@ select disho.id as do_id, disho.quantity as di_quantity, disho.id_dish from dish
 
   @Override
   public Order findOrderByReference(String reference) {
-    return null;
+    if (reference == null || reference.isBlank()) {
+      throw new IllegalArgumentException("Order reference cannot be null or blank");
+    }
+
+    String sql =
+        """
+        select o.id as o_id, o.reference as o_reference,
+               o.creation_datetime as o_datetime
+        from "order" o
+        where o.reference = ?
+        """;
+
+    Connection con = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      stmt = con.prepareStatement(sql);
+      stmt.setString(1, reference);
+      rs = stmt.executeQuery();
+
+      if (!rs.next()) {
+        throw new RuntimeException("Order with reference '" + reference + "' not found");
+      }
+
+      Order order = mapResultSetToOrder(rs);
+      order.setDishOrders(findDishOrdersByOrderId(order.getId()));
+      return order;
+
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Error while trying to retrieve order with reference " + reference, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, con);
+    }
   }
 
   public boolean isStockEnough(Order order) {
