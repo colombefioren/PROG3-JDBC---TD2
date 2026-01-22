@@ -600,9 +600,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         throw new RuntimeException("Ingredient with ID " + id + " not found");
       }
 
-      Ingredient ingredient = mapResultSetToIngredient(rs);
-      ingredient.setStockMovements(findStockMovementsByIngredientId(id));
-      return ingredient;
+        return mapResultSetToIngredient(rs);
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to retrieve ingredient with id " + id, e);
     } finally {
@@ -733,10 +731,12 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   private Ingredient mapResultSetToIngredient(ResultSet rs) throws SQLException {
     Ingredient ingredient = new Ingredient();
-    ingredient.setId(rs.getInt("ing_id"));
+    int ingredientId = rs.getInt("ing_id");
+    ingredient.setId(ingredientId);
     ingredient.setName(rs.getString("ing_name"));
     ingredient.setPrice(rs.getDouble("ing_price"));
     ingredient.setCategory(CategoryEnum.valueOf(rs.getString("ing_category")));
+    ingredient.setStockMovements(findStockMovementsByIngredientId(ingredientId));
     return ingredient;
   }
 
