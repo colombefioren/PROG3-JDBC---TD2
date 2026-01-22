@@ -1065,7 +1065,7 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
   @Override
   public Order saveOrder(Order orderToSave) {
 
-    if(!isStockEnough(orderToSave)){
+    if (!isStockEnough(orderToSave)) {
       throw new IllegalArgumentException("Not enough stock");
     }
 
@@ -1098,14 +1098,66 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
       saveOrderStmt.setTimestamp(2, Timestamp.from(orderToSave.getCreationDatetime()));
       orderId = saveOrderStmt.executeUpdate();
 
-      for(DishOrder dishOrder : orderToSave.getDishOrders()){
+      for (DishOrder dishOrder : orderToSave.getDishOrders()) {
         saveDishOrderStmt.setInt(1, orderId);
         saveDishOrderStmt.setInt(2, dishOrder.getDish().getId());
         saveDishOrderStmt.setInt(3, dishOrder.getQuantity());
         dishOrderIds.add(saveOrderStmt.executeUpdate());
       }
 
+      return findOrderById(orderId);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
 
+  public Order findOrderById(Integer orderId) {
+    if (orderId == null) {
+      throw new IllegalArgumentException("Order id cannot be null");
+    }
+
+    String findOrderSql =
+"""
+     select o.id, o.reference, o.creation_datetime from "order" o where o.id = ?
+""";
+
+    Connection con = null;
+    PreparedStatement findOrderStmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findOrderStmt.setInt(1, orderId);
+      rs = findOrderStmt.executeQuery();
+      if (!rs.next()) {
+        throw new RuntimeException("Order with id " + orderId + " not found");
+      }
+
+      Order order = mapResultSetToOrder(rs);
+      order.setDishOrders(findDishOrdersByOrderId(orderId));
+
+      return order;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public List<DishOrder> findDishOrdersByOrderId(Integer orderId) {
+    String findDishOrdersSql =
+"""
+select do.id, do.quantity, do.id_dish from dish_order do where do.id_order = ?
+""";
+
+    Connection con = null;
+    PreparedStatement findDishOrdersStmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findDishOrdersStmt.setInt(1, orderId);
+      rs = findDishOrdersStmt.executeQuery();
+
+      return mapResultSetToDishOrder(rs);
     } catch (SQLException e) {
       throw new RuntimeException(e);
     }
