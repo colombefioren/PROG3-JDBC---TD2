@@ -3,6 +3,7 @@ package com.jdbctd2.repository;
 import com.jdbctd2.db.DBConnection;
 import com.jdbctd2.model.*;
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -441,6 +442,206 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
   }
 
+  @Override
+  public Ingredient saveIngredient(Ingredient toSave) {
+    if (toSave == null) {
+      throw new IllegalArgumentException("Ingredient cannot be null");
+    }
+    isValid(toSave);
+
+    String upsertIngSql =
+"""
+  insert into ingredient (id, name, price, category)
+     values (?, ?, ?, ?::category)
+     on conflict (id) do update
+        set name = excluded.name,
+            price = excluded.price,
+            category = excluded.category
+        returning id
+""";
+
+    Connection con = null;
+    PreparedStatement upsertIngStmt = null;
+    ResultSet upsertIngRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      Integer savedIngredientId;
+
+      upsertIngStmt = con.prepareStatement(upsertIngSql);
+
+      if (toSave.getId() != null) {
+        upsertIngStmt.setInt(1, toSave.getId());
+      } else {
+        upsertIngStmt.setInt(1, getNextSerialValue(con, "ingredient", "id"));
+      }
+      upsertIngStmt.setString(2, toSave.getName());
+      upsertIngStmt.setDouble(3, toSave.getPrice());
+      upsertIngStmt.setString(4, toSave.getCategory().name());
+
+      upsertIngRs = upsertIngStmt.executeQuery();
+
+      if (!upsertIngRs.next()) {
+        throw new RuntimeException("Error while saving ingredient with name: " + toSave.getName());
+      }
+
+      savedIngredientId = upsertIngRs.getInt(1);
+
+      List<StockMovement> stockMovementList = toSave.getStockMovements();
+      if (stockMovementList != null && !stockMovementList.isEmpty()) {
+        saveStockMovements(con, savedIngredientId, stockMovementList);
+      }
+
+      con.commit();
+
+      return findIngredientById(savedIngredientId);
+    } catch (SQLException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+          System.out.println("An error occurred so that transaction was rolled back");
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException(ex);
+      }
+      throw new RuntimeException("Failed to save ingredient " + toSave.getName() + ". Error: " + e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.err.println("Could not reset auto-commit: " + e);
+      }
+      dbConnection.attemptCloseDBConnection(upsertIngRs, upsertIngStmt, con);
+    }
+  }
+
+  private void saveStockMovements(
+      Connection con, Integer ingredientId, List<StockMovement> stockMovements)
+      throws SQLException {
+    if (stockMovements == null || stockMovements.isEmpty()) {
+      return;
+    }
+
+    String insertStockMovementSql =
+        """
+                insert into stock_movement (id, id_ingredient, quantity, unit, creation_datetime, type)
+                values (?, ?, ?, ?::unit_type, ?, ?::movement_type)
+                on conflict (id) do nothing
+                """;
+
+    PreparedStatement insertStockMovementStmt = null;
+
+    try {
+      insertStockMovementStmt = con.prepareStatement(insertStockMovementSql);
+
+      for (StockMovement movement : stockMovements) {
+        if (movement == null || movement.getValue() == null) {
+          continue;
+        }
+
+        if (movement.getId() != null) {
+          insertStockMovementStmt.setInt(1, movement.getId());
+        } else {
+          insertStockMovementStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
+        }
+
+        insertStockMovementStmt.setInt(2, ingredientId);
+        insertStockMovementStmt.setDouble(3, movement.getValue().getQuantity());
+        insertStockMovementStmt.setString(4, movement.getValue().getUnit().name());
+
+        if (movement.getCreationDatetime() != null) {
+          insertStockMovementStmt.setTimestamp(5, Timestamp.from(movement.getCreationDatetime()));
+        } else {
+          insertStockMovementStmt.setTimestamp(5, Timestamp.from(Instant.now()));
+        }
+
+        insertStockMovementStmt.setString(6, movement.getType().name());
+        insertStockMovementStmt.addBatch();
+      }
+
+      insertStockMovementStmt.executeBatch();
+    } finally {
+      if (insertStockMovementStmt != null) {
+        try {
+          insertStockMovementStmt.close();
+        } catch (SQLException e) {
+          System.err.println("Could not close statement: " + e);
+        }
+      }
+    }
+  }
+
+  private Ingredient findIngredientById(Integer id) {
+    if (id == null || id <= 0) {
+      throw new IllegalArgumentException("Ingredient id must be positive");
+    }
+
+    String sql =
+        """
+        select i.id as ing_id, i.name as ing_name, i.price as ing_price, i.category as ing_category
+        from ingredient i
+        where i.id = ?
+        """;
+
+    Connection con = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      stmt = con.prepareStatement(sql);
+      stmt.setInt(1, id);
+      rs = stmt.executeQuery();
+
+      if (!rs.next()) {
+        throw new RuntimeException("Ingredient with ID " + id + " not found");
+      }
+
+      Ingredient ingredient = mapResultSetToIngredient(rs);
+      ingredient.setStockMovements(findStockMovementsByIngredientId(id));
+      return ingredient;
+    } catch (SQLException e) {
+      throw new RuntimeException("Error while trying to retrieve ingredient with id " + id, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, con);
+    }
+  }
+
+  private List<StockMovement> findStockMovementsByIngredientId(Integer ingredientId) {
+    String sql =
+        """
+        select sm.id as sm_id, sm.quantity, sm.unit, sm.creation_datetime, sm.type
+        from stock_movement sm
+        where sm.id_ingredient = ?
+        order by sm.creation_datetime
+        """;
+
+    Connection con = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      stmt = con.prepareStatement(sql);
+      stmt.setInt(1, ingredientId);
+      rs = stmt.executeQuery();
+
+      List<StockMovement> movements = new ArrayList<>();
+      while (rs.next()) {
+        movements.add(mapResultSetToStockMovement(rs));
+      }
+      return movements;
+    } catch (SQLException e) {
+      throw new RuntimeException(
+          "Error while retrieving stock movements for ingredient " + ingredientId, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, con);
+    }
+  }
+
   private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
     StringBuilder sqlBuilder =
         new StringBuilder(
@@ -510,6 +711,24 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     if (dish.getSellingPrice() != null && dish.getSellingPrice() < 0) {
       throw new IllegalArgumentException("Dish price cannot be negative");
     }
+  }
+
+  private StockMovement mapResultSetToStockMovement(ResultSet rs) throws SQLException {
+    StockMovement movement = new StockMovement();
+    movement.setId(rs.getInt("sm_id"));
+    movement.setType(MovementTypeEnum.valueOf(rs.getString("type")));
+
+    Timestamp timestamp = rs.getTimestamp("creation_datetime");
+    if (timestamp != null) {
+      movement.setCreationDatetime(timestamp.toInstant());
+    }
+
+    StockValue stockValue = new StockValue();
+    stockValue.setQuantity(rs.getDouble("quantity"));
+    stockValue.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+    movement.setValue(stockValue);
+
+    return movement;
   }
 
   private Ingredient mapResultSetToIngredient(ResultSet rs) throws SQLException {
@@ -718,6 +937,8 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     if (existing != null) {
       return existing;
     }
+
+    isValid(ingredient);
 
     String insertSql =
         """

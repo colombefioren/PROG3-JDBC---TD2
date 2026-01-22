@@ -14,4 +14,6 @@ public interface IngredientRepository {
 
   List<Ingredient> findIngredientsByCriteria(
       String ingredientNmae, CategoryEnum category, String dishName, int page, int size);
+
+  Ingredient saveIngredient(Ingredient toSave);
 }
