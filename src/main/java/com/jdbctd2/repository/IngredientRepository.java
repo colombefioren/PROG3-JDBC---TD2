@@ -13,7 +13,7 @@ public interface IngredientRepository {
   List<Ingredient> createIngredients(List<Ingredient> newIngredients);
 
   List<Ingredient> findIngredientsByCriteria(
-      String ingredientNmae, CategoryEnum category, String dishName, int page, int size);
+      String ingredientName, CategoryEnum category, String dishName, int page, int size);
 
   Ingredient saveIngredient(Ingredient toSave);
 }
