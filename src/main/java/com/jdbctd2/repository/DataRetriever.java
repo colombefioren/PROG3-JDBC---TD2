@@ -1240,14 +1240,15 @@ select disho.id as do_id, disho.quantity as di_quantity, disho.id_dish from dish
   }
 
   private void updateStock(Connection con, Order orderToSave) {
-    String insertStockMovementSql = """
+    String insertStockMovementSql =
+        """
         insert into stock_movement (id_ingredient, quantity, unit, creation_datetime, type)
         values (?, ?, ?::unit_type, ?, 'OUT')
         """;
 
     try (PreparedStatement ps = con.prepareStatement(insertStockMovementSql)) {
       for (DishOrder dishOrder : orderToSave.getDishOrders()) {
-        Dish dish = findDishById(dishOrder.getDish().getId());
+        Dish dish = dishOrder.getDish();
 
         for (DishIngredient dishIngredient : dish.getDishIngredients()) {
           double quantityToDeduct = dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
@@ -1261,7 +1262,7 @@ select disho.id as do_id, disho.quantity as di_quantity, disho.id_dish from dish
       }
       ps.executeBatch();
     } catch (SQLException e) {
-        throw new RuntimeException(e);
+      throw new RuntimeException(e);
     }
   }
 }
