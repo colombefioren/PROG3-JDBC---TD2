@@ -3,6 +3,7 @@ package com.jdbctd2;
 import com.jdbctd2.model.*;
 import com.jdbctd2.model.UnitEnum;
 import com.jdbctd2.repository.DataRetriever;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -302,6 +303,18 @@ public class Main {
       }
       System.out.println();
     }
+
+    System.out.println("\n===> New test to verify stock <===\n");
+
+    Instant instant = Instant.parse("2024-01-06T12:00:00Z");
+
+    System.out.println("Ingredient stock after every movements :");
+    List<Ingredient> ingredients = dataRetriever.findIngredients(1, 10);
+    for (Ingredient ingredient : ingredients) {
+      StockValue stock = ingredient.getStockValueAt(instant);
+      System.out.println(ingredient.getName() + ": " + stock.getQuantity() + " " + stock.getUnit());
+    }
+
     // initialize the db at the end as well because why not
     dataRetriever.initializeDB();
   }
