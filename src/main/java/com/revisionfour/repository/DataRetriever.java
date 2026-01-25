@@ -277,11 +277,12 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public List<Dish> findDishesByIngredientName(String ingredientName) {
-    if(ingredientName == null || ingredientName.isBlank()){
+    if (ingredientName == null || ingredientName.isBlank()) {
       throw new IllegalArgumentException("Ingredient name cannot be null or empty");
     }
 
-    String findDishSql = """
+    String findDishSql =
+"""
     select d.id as d_id, d.name as d_name, d.dish_type from dish d join ingredient i on d.id = i.id_dish where i.name ilike ?
 """;
 
@@ -289,20 +290,49 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     PreparedStatement findDishStmt = null;
     ResultSet findDishRs = null;
 
-    try{
+    try {
       con = dbConnection.getDBConnection();
       findDishStmt = con.prepareStatement(findDishSql);
       findDishStmt.setString(1, "%" + ingredientName + "%");
       findDishRs = findDishStmt.executeQuery();
       List<Dish> dishes = new ArrayList<>();
-      while(findDishRs.next()){
+      while (findDishRs.next()) {
         dishes.add(mapDishFromResultSet(findDishRs));
       }
       return dishes;
     } catch (SQLException e) {
-        throw new RuntimeException("Failed to fetch dishes by ingredient name",e);
-    }finally{
+      throw new RuntimeException("Failed to fetch dishes by ingredient name", e);
+    } finally {
       dbConnection.attemptCloseDBConnection(findDishRs, findDishStmt, con);
+    }
+  }
+
+  public Ingredient findIngredientByName(String ingredientName) {
+    String findIngByNameSql =
+        """
+            select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category, i.id_dish as id_dish
+            from ingredient i
+            where lower(i.name) = lower(?)
+            order by i_id
+            """;
+
+    Connection con = null;
+    PreparedStatement findIngByNameStmt = null;
+    ResultSet findIngByNameRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findIngByNameStmt = con.prepareStatement(findIngByNameSql);
+      findIngByNameStmt.setString(1, ingredientName);
+      findIngByNameRs = findIngByNameStmt.executeQuery();
+      if (!findIngByNameRs.next()) {
+        return null;
+      }
+      return mapIngredientFromResultSet(findIngByNameRs);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(con, findIngByNameStmt, findIngByNameRs);
     }
   }
 
