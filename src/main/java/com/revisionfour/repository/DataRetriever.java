@@ -161,6 +161,20 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     if (dish == null) {
       throw new IllegalArgumentException("Dish cannot be null");
     }
+
+    isValid(dish);
+
+    String saveDishSql =
+"""
+    insert into dish (id, name, dish_type)
+    values (?, ?, ?::dish_type)
+    on conflict do update
+    set name = excluded.name, dish_type = excluded.dish_type
+    returning id
+""";
+
+    Connection con = null;
+    PreparedStatement saveDishStmt = null;
   }
 
   @Override
@@ -225,7 +239,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 """
     insert into ingredient (id, name, price, category)
     values (?, ?, ?, ?::category)
-    returning id;
+    returning id
 """;
 
     Connection con = null;
@@ -350,6 +364,8 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       return mapIngredientFromResultSet(findIngRs);
     } catch (SQLException e) {
       throw new RuntimeException("Error while fetching ingredient", e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
     }
   }
 
