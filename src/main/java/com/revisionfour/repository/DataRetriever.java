@@ -236,7 +236,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         """
                     update ingredient
                     set id_dish = null
-                    where id_dish = ? and id not int (%s)
+                    where id_dish = ? and id not in (%s)
                 """;
 
     String inClause = ingredients.stream().map(i -> "?").collect(Collectors.joining(","));
