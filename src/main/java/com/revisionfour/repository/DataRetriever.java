@@ -213,6 +213,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
 
     for (Ingredient newIngredient : newIngredients) {
+      if(newIngredient == null){
+        throw new IllegalArgumentException("New ingredient cannot be null");
+      }
       isValid(newIngredient);
     }
 
