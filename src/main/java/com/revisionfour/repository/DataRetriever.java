@@ -145,6 +145,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     ingredient.setId(ingRs.getInt("i_id"));
     ingredient.setName(ingRs.getString("i_name"));
     ingredient.setPrice(ingRs.getDouble("i_price"));
+    ingredient.setDish(findDishById(ingRs.getInt("id_dish")));
     ingredient.setCategory(CategoryEnum.valueOf(ingRs.getString("i_category")));
     return ingredient;
   }
@@ -364,9 +365,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
-        Ingredient ingredient = mapIngredientFromResultSet(findIngRs);
-        ingredient.setDish(findDishById(findIngRs.getInt("id_dish")));
-        ingredients.add(ingredient);
+        ingredients.add(mapIngredientFromResultSet(findIngRs));
       }
 
       return ingredients;
