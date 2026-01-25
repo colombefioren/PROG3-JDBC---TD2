@@ -77,7 +77,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String dishSql =
 """
-    select d.id as d_id, d.name as d_name, d.dish_type from dish where d.id = ?;
+    select d.id as d_id, d.name as d_name, d.dish_type from dish where d.id = ?
 """;
 
     Connection con = null;
@@ -112,7 +112,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String ingredientSql =
 """
-  select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id_dish = ?;
+  select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id_dish = ?
 """;
 
     Connection con = null;
@@ -167,7 +167,42 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public List<Ingredient> findIngredients(int page, int size) {
-    return List.of();
+    if (page <= 0 || size <= 0) {
+      throw new IllegalArgumentException("page and size must be positive and greater than 0");
+    }
+
+    String findIngSql =
+"""
+    select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category
+    from ingredient i
+    order by i.id
+    limit ? offset ?
+""";
+
+    Connection con = null;
+    PreparedStatement findIngStmt = null;
+    ResultSet findIngRs = null;
+    int offset = (page - 1) * size;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findIngStmt = con.prepareStatement(findIngSql);
+      findIngStmt.setInt(1, size);
+      findIngStmt.setInt(2, offset);
+      findIngRs = findIngStmt.executeQuery();
+
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (findIngRs.next()) {
+        ingredients.add(mapIngredientFromResultSet(findIngRs));
+      }
+
+      return ingredients;
+
+    } catch (SQLException e) {
+      throw new RuntimeException("Error while trying to fetch ingredients", e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
+    }
   }
 
   @Override
