@@ -213,7 +213,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
 
     for (Ingredient newIngredient : newIngredients) {
-      if(newIngredient == null){
+      if (newIngredient == null) {
         throw new IllegalArgumentException("New ingredient cannot be null");
       }
       isValid(newIngredient);
@@ -283,10 +283,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   private int getNextSerialValue(Connection con, String tableName, String columnName) {
     String sequenceName = getSerialSequenceName(con, tableName, columnName);
-    String getNextValueSql =
-"""
- select nextval('" + sequenceName + "')
-""";
+    String getNextValueSql = String.format("select nextval('%s')", sequenceName);
     updateSequence(con, columnName, sequenceName, tableName);
     Statement getNextValueStmt = null;
     ResultSet getNextValueRs = null;
