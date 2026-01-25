@@ -281,15 +281,14 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     String sequenceName = getSerialSequenceName(con, tableName, columnName);
     String getNextValueSql =
 """
-  select nextval(?);
+ select nextval('" + sequenceName + "')
 """;
     updateSequence(con, columnName, sequenceName, tableName);
-    PreparedStatement getNextValueStmt = null;
+    Statement getNextValueStmt = null;
     ResultSet getNextValueRs = null;
     try {
-      getNextValueStmt = con.prepareStatement(getNextValueSql);
-      getNextValueStmt.setString(1, sequenceName);
-      getNextValueRs = getNextValueStmt.executeQuery();
+      getNextValueStmt = con.createStatement();
+      getNextValueRs = getNextValueStmt.executeQuery(getNextValueSql);
       getNextValueRs.next();
       return getNextValueRs.getInt(1);
     } catch (SQLException e) {
@@ -300,14 +299,13 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   }
 
   private String getSerialSequenceName(Connection con, String tableName, String columnName) {
-    String getSeqSql = "select pg_get_serial_sequence(?, ?)";
-    PreparedStatement getSeqStmt = null;
+    String getSeqSql =
+        String.format("SELECT pg_get_serial_sequence('%s', '%s')", tableName, columnName);
+    Statement getSeqStmt = null;
     ResultSet getSeqRs = null;
     try {
-      getSeqStmt = con.prepareStatement(getSeqSql);
-      getSeqStmt.setString(1, tableName);
-      getSeqStmt.setString(2, columnName);
-      getSeqRs = getSeqStmt.executeQuery();
+      getSeqStmt = con.createStatement();
+      getSeqRs = getSeqStmt.executeQuery(getSeqSql);
       getSeqRs.next();
       return getSeqRs.getString(1);
     } catch (SQLException e) {
@@ -319,14 +317,14 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   private void updateSequence(
       Connection con, String columnName, String sequenceName, String tableName) {
-    String updateSeqSql = "select setval(?,(select max(?) from ?))";
-    PreparedStatement updateSeqStmt = null;
+    String updateSeqSql =
+        String.format(
+            "SELECT setval('%s', (SELECT COALESCE(MAX(%s),0) FROM %s))",
+            sequenceName, columnName, tableName);
+    Statement updateSeqStmt = null;
     try {
-      updateSeqStmt = con.prepareStatement(updateSeqSql);
-      updateSeqStmt.setString(1, sequenceName);
-      updateSeqStmt.setString(2, columnName);
-      updateSeqStmt.setString(3, tableName);
-      updateSeqStmt.executeQuery();
+      updateSeqStmt = con.createStatement();
+      updateSeqStmt.executeQuery(updateSeqSql);
     } catch (SQLException e) {
       throw new RuntimeException("Failed to update sequence", e);
     } finally {
