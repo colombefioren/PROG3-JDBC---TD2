@@ -74,6 +74,8 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   public Dish findDishById(Integer id) {
     if (id == null) {
       throw new IllegalArgumentException("id cannot be null");
+    } else if (id == 0) {
+      return null;
     }
 
     String dishSql =
@@ -169,7 +171,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 """
     insert into dish (id, name, dish_type)
     values (?, ?, ?::dish_type)
-    on conflict do update
+    on conflict (id) do update
     set name = excluded.name, dish_type = excluded.dish_type
     returning id
 """;
@@ -204,7 +206,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
           con.rollback();
         }
       } catch (SQLException ex) {
-        throw new RuntimeException("Failed to rollaback", ex);
+        throw new RuntimeException("Failed to rollback", ex);
       }
       throw new RuntimeException("Failed to save new dish", e);
     } finally {
