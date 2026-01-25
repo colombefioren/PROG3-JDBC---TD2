@@ -8,6 +8,7 @@ import com.revisionfour.model.Ingredient;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class DataRetriever implements IngredientRepository, DishRepository {
   private final DBConnection dbConnection;
@@ -175,6 +176,103 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     Connection con = null;
     PreparedStatement saveDishStmt = null;
+    ResultSet saveDishRs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      saveDishStmt = con.prepareStatement(saveDishSql);
+      if (dish.getId() == null) {
+        saveDishStmt.setInt(1, getNextSerialValue(con, "Dish", "id"));
+      } else {
+        saveDishStmt.setInt(1, dish.getId());
+      }
+      saveDishStmt.setString(2, dish.getName());
+      saveDishStmt.setString(3, dish.getDishType().name());
+      saveDishRs = saveDishStmt.executeQuery();
+      saveDishRs.next();
+      int dishId = saveDishRs.getInt(1);
+
+      List<Ingredient> newIngredients = dish.getIngredients();
+      detachIngredients(con, dishId, newIngredients);
+      attachIngredients(con, dishId, newIngredients);
+
+      con.commit();
+      return findDishById(dishId);
+    } catch (SQLException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException("Failed to rollaback", ex);
+      }
+      throw new RuntimeException("Failed to save new dish", e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException ex) {
+        System.out.println("Failed to set autocommit to true");
+      }
+      dbConnection.attemptCloseDBConnection(saveDishRs, saveDishStmt, con);
+    }
+  }
+
+  private void detachIngredients(Connection conn, Integer dishId, List<Ingredient> ingredients)
+          throws SQLException {
+    if (ingredients == null || ingredients.isEmpty()) {
+      try (PreparedStatement ps = conn.prepareStatement(
+              "update ingredient set id_dish = null where id_dish = ?")) {
+        ps.setInt(1, dishId);
+        ps.executeUpdate();
+      }
+      return;
+    }
+
+    String baseSql = """
+                    update ingredient
+                    set id_dish = null
+                    where id_dish = ? and id not int (%s)
+                """;
+
+    String inClause = ingredients.stream()
+            .map(i -> "?")
+            .collect(Collectors.joining(","));
+
+    String sql = String.format(baseSql, inClause);
+
+    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+      ps.setInt(1, dishId);
+      int index = 2;
+      for (Ingredient ingredient : ingredients) {
+        ps.setInt(index++, ingredient.getId());
+      }
+      ps.executeUpdate();
+    }
+  }
+
+  private void attachIngredients(Connection conn, Integer dishId, List<Ingredient> ingredients)
+          throws SQLException {
+
+    if (ingredients == null || ingredients.isEmpty()) {
+      return;
+    }
+
+    String attachSql = """
+                    update ingredient
+                    set id_dish = ?
+                    where id = ?
+                """;
+
+    try (PreparedStatement ps = conn.prepareStatement(attachSql)) {
+      for (Ingredient ingredient : ingredients) {
+        ps.setInt(1, dishId);
+        ps.setInt(2, ingredient.getId());
+        ps.addBatch();
+      }
+      ps.executeBatch();
+    }
   }
 
   @Override
@@ -364,7 +462,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       return mapIngredientFromResultSet(findIngRs);
     } catch (SQLException e) {
       throw new RuntimeException("Error while fetching ingredient", e);
-    }finally{
+    } finally {
       dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
     }
   }
