@@ -19,17 +19,24 @@ public class Ingredient {
     this.dish = dish;
   }
 
+    public Ingredient(Integer id, String name, CategoryEnum category, Double price) {
+        this.id = id;
+        this.name = name;
+        this.category = category;
+        this.price = price;
+    }
+
+    public Ingredient(String name, CategoryEnum category, Double price) {
+    this.name = name;
+    this.category = category;
+    this.price = price;
+  }
+
   public Ingredient(String name, CategoryEnum category, Double price, Dish dish) {
     this.name = name;
     this.category = category;
     this.price = price;
     this.dish = dish;
-  }
-
-  public Ingredient(String name, CategoryEnum category, Double price) {
-    this.name = name;
-    this.category = category;
-    this.price = price;
   }
 
   public Integer getId() {
