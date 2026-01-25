@@ -277,7 +277,33 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public List<Dish> findDishesByIngredientName(String ingredientName) {
-    return List.of();
+    if(ingredientName == null || ingredientName.isBlank()){
+      throw new IllegalArgumentException("Ingredient name cannot be null or empty");
+    }
+
+    String findDishSql = """
+    select d.id as d_id, d.name as d_name, d.dish_type from dish d join ingredient i on d.id = i.id_dish where i.name ilike ?
+""";
+
+    Connection con = null;
+    PreparedStatement findDishStmt = null;
+    ResultSet findDishRs = null;
+
+    try{
+      con = dbConnection.getDBConnection();
+      findDishStmt = con.prepareStatement(findDishSql);
+      findDishStmt.setString(1, "%" + ingredientName + "%");
+      findDishRs = findDishStmt.executeQuery();
+      List<Dish> dishes = new ArrayList<>();
+      while(findDishRs.next()){
+        dishes.add(mapDishFromResultSet(findDishRs));
+      }
+      return dishes;
+    } catch (SQLException e) {
+        throw new RuntimeException("Failed to fetch dishes by ingredient name",e);
+    }finally{
+      dbConnection.attemptCloseDBConnection(findDishRs, findDishStmt, con);
+    }
   }
 
   @Override
@@ -537,8 +563,8 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
     StringBuilder sqlBuilder =
-            new StringBuilder(
-                    """
+        new StringBuilder(
+            """
                             select distinct i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category
                             from ingredient i
                             """);
@@ -569,12 +595,11 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         hasWhere = true;
       }
       sqlBuilder.append(
-              "exists (select 1 from dish_ingredient di join dish d on di.id_dish = d.id where di.id_ingredient = i.id and d.name ilike ?)");
+          "exists (select 1 from dish_ingredient di join dish d on di.id_dish = d.id where di.id_ingredient = i.id and d.name ilike ?)");
     }
 
     sqlBuilder.append(" order by i.id limit ? offset ?");
 
     return sqlBuilder.toString();
   }
-
 }
