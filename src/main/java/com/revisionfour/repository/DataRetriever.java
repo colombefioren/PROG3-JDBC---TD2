@@ -158,7 +158,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public Dish saveDish(Dish dish) {
-    return null;
+    if (dish == null) {
+      throw new IllegalArgumentException("Dish cannot be null");
+    }
   }
 
   @Override
@@ -223,11 +225,6 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 """
     insert into ingredient (id, name, price, category)
     values (?, ?, ?, ?::category)
-    on conflict (id)
-    do update
-    set price = excluded.price,
-    category = excluded.category,
-    name = excluded.name
     returning id;
 """;
 
