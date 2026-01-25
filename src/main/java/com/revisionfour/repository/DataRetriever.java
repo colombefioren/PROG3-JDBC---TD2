@@ -344,7 +344,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String findIngSql =
 """
-    select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category
+    select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category, i.id_dish
     from ingredient i
     order by i.id
     limit ? offset ?
@@ -364,7 +364,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
-        ingredients.add(mapIngredientFromResultSet(findIngRs));
+        Ingredient ingredient = mapIngredientFromResultSet(findIngRs);
+        ingredient.setDish(findDishById(findIngRs.getInt("id_dish")));
+        ingredients.add(ingredient);
       }
 
       return ingredients;
