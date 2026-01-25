@@ -145,7 +145,6 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     ingredient.setId(ingRs.getInt("i_id"));
     ingredient.setName(ingRs.getString("i_name"));
     ingredient.setPrice(ingRs.getDouble("i_price"));
-    ingredient.setDish(findDishById(ingRs.getInt("id_dish")));
     ingredient.setCategory(CategoryEnum.valueOf(ingRs.getString("i_category")));
     return ingredient;
   }
@@ -329,7 +328,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       if (!findIngByNameRs.next()) {
         return null;
       }
-      return mapIngredientFromResultSet(findIngByNameRs);
+      Ingredient ingredient = mapIngredientFromResultSet(findIngByNameRs);
+      ingredient.setDish(findDishById(findIngByNameRs.getInt("id_dish")));
+      return ingredient;
     } catch (SQLException e) {
       throw new RuntimeException(e);
     } finally {
@@ -365,7 +366,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
-        ingredients.add(mapIngredientFromResultSet(findIngRs));
+        Ingredient ingredient = mapIngredientFromResultSet(findIngRs);
+        ingredient.setDish(findDishById(findIngRs.getInt("id_dish")));
+        ingredients.add(ingredient);
       }
 
       return ingredients;
@@ -582,7 +585,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       findIngRs = findIngStmt.executeQuery();
       List<Ingredient> ingredients = new ArrayList<>();
       while (findIngRs.next()) {
-        ingredients.add(mapIngredientFromResultSet(findIngRs));
+        Ingredient ingredient = mapIngredientFromResultSet(findIngRs);
+        ingredient.setDish(findDishById(findIngRs.getInt("id_dish")));
+        ingredients.add(ingredient);
       }
       return ingredients;
     } catch (SQLException e) {
