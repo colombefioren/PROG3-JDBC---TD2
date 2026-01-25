@@ -220,25 +220,24 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   }
 
   private void detachIngredients(Connection conn, Integer dishId, List<Ingredient> ingredients)
-          throws SQLException {
+      throws SQLException {
     if (ingredients == null || ingredients.isEmpty()) {
-      try (PreparedStatement ps = conn.prepareStatement(
-              "update ingredient set id_dish = null where id_dish = ?")) {
+      try (PreparedStatement ps =
+          conn.prepareStatement("update ingredient set id_dish = null where id_dish = ?")) {
         ps.setInt(1, dishId);
         ps.executeUpdate();
       }
       return;
     }
 
-    String baseSql = """
+    String baseSql =
+        """
                     update ingredient
                     set id_dish = null
                     where id_dish = ? and id not int (%s)
                 """;
 
-    String inClause = ingredients.stream()
-            .map(i -> "?")
-            .collect(Collectors.joining(","));
+    String inClause = ingredients.stream().map(i -> "?").collect(Collectors.joining(","));
 
     String sql = String.format(baseSql, inClause);
 
@@ -253,13 +252,14 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   }
 
   private void attachIngredients(Connection conn, Integer dishId, List<Ingredient> ingredients)
-          throws SQLException {
+      throws SQLException {
 
     if (ingredients == null || ingredients.isEmpty()) {
       return;
     }
 
-    String attachSql = """
+    String attachSql =
+        """
                     update ingredient
                     set id_dish = ?
                     where id = ?
@@ -491,6 +491,90 @@ public class DataRetriever implements IngredientRepository, DishRepository {
   @Override
   public List<Ingredient> findIngredientsByCriteria(
       String ingredientName, CategoryEnum category, String dishName, int page, int size) {
-    return List.of();
+
+    if (page <= 0 || size <= 0) {
+      throw new IllegalArgumentException("Page and size must be valid values");
+    }
+
+    String findIngSql = getFindIngSql(ingredientName, category, dishName);
+
+    Connection con = null;
+    PreparedStatement findIngStmt = null;
+    ResultSet findIngRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findIngStmt = con.prepareStatement(findIngSql);
+      int paramIndex = 1;
+
+      if (ingredientName != null && !ingredientName.isBlank()) {
+        findIngStmt.setString(paramIndex++, "%" + ingredientName + "%");
+      }
+
+      if (category != null) {
+        findIngStmt.setString(paramIndex++, category.name());
+      }
+
+      if (dishName != null && !dishName.isBlank()) {
+        findIngStmt.setString(paramIndex++, "%" + dishName + "%");
+      }
+
+      findIngStmt.setInt(paramIndex++, size);
+      findIngStmt.setInt(paramIndex++, (page - 1) * size);
+
+      findIngRs = findIngStmt.executeQuery();
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (findIngRs.next()) {
+        ingredients.add(mapIngredientFromResultSet(findIngRs));
+      }
+      return ingredients;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
+    }
   }
+
+  private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
+    StringBuilder sqlBuilder =
+            new StringBuilder(
+                    """
+                            select distinct i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category
+                            from ingredient i
+                            """);
+
+    boolean hasWhere = false;
+
+    if (ingredientName != null && !ingredientName.isBlank()) {
+      sqlBuilder.append(" where ");
+      hasWhere = true;
+      sqlBuilder.append("i.name ilike ?");
+    }
+
+    if (category != null) {
+      if (hasWhere) {
+        sqlBuilder.append(" and ");
+      } else {
+        sqlBuilder.append(" where ");
+        hasWhere = true;
+      }
+      sqlBuilder.append("i.category = ?::category");
+    }
+
+    if (dishName != null && !dishName.isBlank()) {
+      if (hasWhere) {
+        sqlBuilder.append(" and ");
+      } else {
+        sqlBuilder.append(" where ");
+        hasWhere = true;
+      }
+      sqlBuilder.append(
+              "exists (select 1 from dish_ingredient di join dish d on di.id_dish = d.id where di.id_ingredient = i.id and d.name ilike ?)");
+    }
+
+    sqlBuilder.append(" order by i.id limit ? offset ?");
+
+    return sqlBuilder.toString();
+  }
+
 }
