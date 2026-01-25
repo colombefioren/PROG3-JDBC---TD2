@@ -3,10 +3,10 @@ package com.revisionfour.repository;
 import com.revisionfour.db.DBConnection;
 import com.revisionfour.model.CategoryEnum;
 import com.revisionfour.model.Dish;
+import com.revisionfour.model.DishTypeEnum;
 import com.revisionfour.model.Ingredient;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
 
 public class DataRetriever implements IngredientRepository, DishRepository {
@@ -71,7 +71,88 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
   @Override
   public Dish findDishById(Integer id) {
-    return null;
+    if (id == null) {
+      throw new IllegalArgumentException("id cannot be null");
+    }
+
+    String dishSql =
+"""
+    select d.id as d_id, d.name as d_name, d.dish_type from dish where d.id = ?;
+""";
+
+    Connection con = null;
+    PreparedStatement dishStmt = null;
+    ResultSet dishRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      dishStmt = con.prepareStatement(dishSql);
+      dishStmt.setInt(1, id);
+
+      dishRs = dishStmt.executeQuery();
+
+      if (!dishRs.next()) {
+        throw new RuntimeException("Dish with id " + id + " not found");
+      }
+      Dish dish = mapDishFromResultSet(dishRs);
+      dish.setIngredients(findIngredientsByDishId(id));
+
+      return dish;
+    } catch (SQLException e) {
+      throw new RuntimeException("Error while trying to fetch dish", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(dishRs, dishStmt, con);
+    }
+  }
+
+  private List<Ingredient> findIngredientsByDishId(Integer id) {
+    if (id == null) {
+      throw new IllegalArgumentException("id cannot be null");
+    }
+
+    String ingredientSql =
+"""
+  select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id_dish = ?;
+""";
+
+    Connection con = null;
+    PreparedStatement ingStmt = null;
+    ResultSet ingRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      ingStmt = con.prepareStatement(ingredientSql);
+      ingStmt.setInt(1, id);
+      ingRs = ingStmt.executeQuery();
+
+      List<Ingredient> ingredients = new ArrayList<>();
+      while (ingRs.next()) {
+        ingredients.add(mapIngredientFromResultSet(ingRs));
+      }
+
+      return ingredients;
+
+    } catch (SQLException e) {
+      throw new RuntimeException("Error while fetching ingredients", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(ingRs, ingStmt, con);
+    }
+  }
+
+  private Ingredient mapIngredientFromResultSet(ResultSet ingRs) throws SQLException {
+    Ingredient ingredient = new Ingredient();
+    ingredient.setId(ingRs.getInt("i_id"));
+    ingredient.setName(ingRs.getString("i_name"));
+    ingredient.setCategory(CategoryEnum.valueOf(ingRs.getString("i_category")));
+    return ingredient;
+  }
+
+  private Dish mapDishFromResultSet(ResultSet dishRs) throws SQLException {
+    Dish dish = new Dish();
+    dish.setId(dishRs.getInt("d_id"));
+    dish.setName(dishRs.getString("d_name"));
+    dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
+    return dish;
   }
 
   @Override
