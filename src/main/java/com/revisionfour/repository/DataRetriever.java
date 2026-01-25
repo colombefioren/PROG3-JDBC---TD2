@@ -591,8 +591,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
   }
 
-  private String getFindIngSql(
-      String ingredientName, CategoryEnum category, String dishName) {
+  private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
     String findIngSql =
         """
             select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category, i.id_dish, d.name as d_name
@@ -622,7 +621,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       findIngSql += "d.name ilike ?";
     }
 
-    findIngSql += " order by ing_id limit ? offset ?";
+    findIngSql += " order by i_id limit ? offset ?";
     return findIngSql;
   }
 }
