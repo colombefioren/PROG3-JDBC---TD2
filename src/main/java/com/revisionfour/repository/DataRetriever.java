@@ -143,6 +143,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     Ingredient ingredient = new Ingredient();
     ingredient.setId(ingRs.getInt("i_id"));
     ingredient.setName(ingRs.getString("i_name"));
+    ingredient.setPrice(ingRs.getDouble("i_price"));
     ingredient.setCategory(CategoryEnum.valueOf(ingRs.getString("i_category")));
     return ingredient;
   }
@@ -200,14 +201,178 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     } catch (SQLException e) {
       throw new RuntimeException("Error while trying to fetch ingredients", e);
-    }finally{
+    } finally {
       dbConnection.attemptCloseDBConnection(findIngRs, findIngStmt, con);
     }
   }
 
   @Override
   public List<Ingredient> createIngredients(List<Ingredient> newIngredients) {
-    return List.of();
+    if (newIngredients == null || newIngredients.isEmpty()) {
+      throw new IllegalArgumentException("New ingredients list cannot be null or empty");
+    }
+
+    for (Ingredient newIngredient : newIngredients) {
+      isValid(newIngredient);
+    }
+
+    String createIngSql =
+"""
+    insert into ingredient (id, name, price, category)
+    values (?, ?, ?, ?::category)
+    on conflict (id)
+    do update
+    set price = excluded.price,
+    category = excluded.category,
+    name = excluded.name
+    returning id;
+""";
+
+    Connection con = null;
+    PreparedStatement createIngStmt = null;
+    ResultSet createIngRs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      createIngStmt = con.prepareStatement(createIngSql);
+      List<Ingredient> createdIngredients = new ArrayList<>();
+
+      for (Ingredient newIngredient : newIngredients) {
+        if (newIngredient.getId() == null) {
+          createIngStmt.setInt(1, getNextSerialValue(con, "Ingredient", "id"));
+        } else {
+          createIngStmt.setInt(1, newIngredient.getId());
+        }
+        createIngStmt.setString(2, newIngredient.getName());
+        createIngStmt.setDouble(3, newIngredient.getPrice());
+        createIngStmt.setString(4, newIngredient.getCategory().name());
+        createIngRs = createIngStmt.executeQuery();
+        createIngRs.next();
+        createdIngredients.add(findIngredientById(createIngRs.getInt(1)));
+      }
+      con.commit();
+      return createdIngredients;
+    } catch (SQLException e) {
+      try {
+        if (con != null) {
+          if (!con.isClosed()) {
+            con.rollback();
+          }
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException("Failed to rollback", ex);
+      }
+      throw new RuntimeException("Error while creating ingredients", e);
+    } finally {
+      try {
+        if (con != null) {
+          if (!con.isClosed()) {
+            con.setAutoCommit(true);
+          }
+        }
+      } catch (SQLException e) {
+        System.out.println("Failed to set autoCommit to true");
+      }
+      dbConnection.attemptCloseDBConnection(createIngRs, createIngStmt, con);
+    }
+  }
+
+  private int getNextSerialValue(Connection con, String tableName, String columnName) {
+    String sequenceName = getSerialSequenceName(con, tableName, columnName);
+    String getNextValueSql =
+"""
+  select nextval(?);
+""";
+    updateSequence(con, columnName, sequenceName, tableName);
+    PreparedStatement getNextValueStmt = null;
+    ResultSet getNextValueRs = null;
+    try {
+      getNextValueStmt = con.prepareStatement(getNextValueSql);
+      getNextValueStmt.setString(1, sequenceName);
+      getNextValueRs = getNextValueStmt.executeQuery();
+      getNextValueRs.next();
+      return getNextValueRs.getInt(1);
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to get next value", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(getNextValueRs, getNextValueStmt);
+    }
+  }
+
+  private String getSerialSequenceName(Connection con, String tableName, String columnName) {
+    String getSeqSql = "select pg_get_serial_sequence(?, ?)";
+    PreparedStatement getSeqStmt = null;
+    ResultSet getSeqRs = null;
+    try {
+      getSeqStmt = con.prepareStatement(getSeqSql);
+      getSeqStmt.setString(1, tableName);
+      getSeqStmt.setString(2, columnName);
+      getSeqRs = getSeqStmt.executeQuery();
+      getSeqRs.next();
+      return getSeqRs.getString(1);
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to get sequence name", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(getSeqRs, getSeqStmt);
+    }
+  }
+
+  private void updateSequence(
+      Connection con, String columnName, String sequenceName, String tableName) {
+    String updateSeqSql = "select setval(?,(select max(?) from ?))";
+    PreparedStatement updateSeqStmt = null;
+    try {
+      updateSeqStmt = con.prepareStatement(updateSeqSql);
+      updateSeqStmt.setString(1, sequenceName);
+      updateSeqStmt.setString(2, columnName);
+      updateSeqStmt.setString(3, tableName);
+      updateSeqStmt.executeQuery();
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to update sequence", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(updateSeqStmt);
+    }
+  }
+
+  private Ingredient findIngredientById(int id) {
+    String findIng =
+"""
+    select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id = ?
+""";
+
+    Connection con = null;
+    PreparedStatement findIngStmt = null;
+    ResultSet findIngRs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      findIngStmt = con.prepareStatement(findIng);
+      findIngStmt.setInt(1, id);
+      findIngRs = findIngStmt.executeQuery();
+      return mapIngredientFromResultSet(findIngRs);
+    } catch (SQLException e) {
+      throw new RuntimeException("Error while fetching ingredient", e);
+    }
+  }
+
+  private void isValid(Ingredient newIngredient) {
+    if (newIngredient.getName() == null || newIngredient.getName().isBlank()) {
+      throw new IllegalArgumentException("Ingredient name cannot be null or empty");
+    }
+    if (newIngredient.getCategory() == null) {
+      throw new IllegalArgumentException("Ingredient category cannot be null");
+    }
+    if (newIngredient.getPrice() == null || newIngredient.getPrice() <= 0) {
+      throw new IllegalArgumentException("Ingredient price cannot be null or negative");
+    }
+  }
+
+  private void isValid(Dish newDish) {
+    if (newDish.getName() == null || newDish.getName().isBlank()) {
+      throw new IllegalArgumentException("Dish name cannot be null or empty");
+    }
+    if (newDish.getDishType() == null) {
+      throw new IllegalArgumentException("Dish type cannot be null");
+    }
   }
 
   @Override
