@@ -297,7 +297,9 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       findDishRs = findDishStmt.executeQuery();
       List<Dish> dishes = new ArrayList<>();
       while (findDishRs.next()) {
-        dishes.add(mapDishFromResultSet(findDishRs));
+        Dish dish = mapDishFromResultSet(findDishRs);
+        dish.setIngredients(findIngredientsByDishId(dish.getId()));
+        dishes.add(dish);
       }
       return dishes;
     } catch (SQLException e) {
