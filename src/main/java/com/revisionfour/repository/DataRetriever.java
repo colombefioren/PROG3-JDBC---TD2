@@ -248,7 +248,8 @@ public class DataRetriever implements IngredientRepository, DishRepository {
         createIngStmt.setString(4, newIngredient.getCategory().name());
         createIngRs = createIngStmt.executeQuery();
         createIngRs.next();
-        createdIngredients.add(findIngredientById(createIngRs.getInt(1)));
+        newIngredient.setId(createIngRs.getInt(1));
+        createdIngredients.add(newIngredient);
       }
       con.commit();
       return createdIngredients;
@@ -332,7 +333,10 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
   }
 
-  private Ingredient findIngredientById(int id) {
+  private Ingredient findIngredientById(Integer id) {
+    if (id == null) {
+      throw new IllegalArgumentException("id cannot be null");
+    }
     String findIng =
 """
     select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id = ?
