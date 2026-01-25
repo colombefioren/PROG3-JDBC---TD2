@@ -78,7 +78,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String dishSql =
 """
-    select d.id as d_id, d.name as d_name, d.dish_type from dish where d.id = ?
+    select d.id as d_id, d.name as d_name, d.dish_type from dish d where d.id = ?
 """;
 
     Connection con = null;
@@ -591,45 +591,38 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     }
   }
 
-  private String getFindIngSql(String ingredientName, CategoryEnum category, String dishName) {
-    StringBuilder sqlBuilder =
-        new StringBuilder(
-            """
-                            select distinct i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category
-                            from ingredient i
-                            """);
-
+  private String getFindIngSql(
+      String ingredientName, CategoryEnum category, String dishName) {
+    String findIngSql =
+        """
+            select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category, i.id_dish, d.name as d_name
+            from Ingredient i
+            left join Dish d on i.id_dish = d.id
+            """;
     boolean hasWhere = false;
-
     if (ingredientName != null && !ingredientName.isBlank()) {
-      sqlBuilder.append(" where ");
+      findIngSql += "where i.name ilike ?";
       hasWhere = true;
-      sqlBuilder.append("i.name ilike ?");
     }
-
     if (category != null) {
       if (hasWhere) {
-        sqlBuilder.append(" and ");
+        findIngSql += " and ";
       } else {
-        sqlBuilder.append(" where ");
-        hasWhere = true;
+        findIngSql += " where ";
       }
-      sqlBuilder.append("i.category = ?::category");
+      findIngSql += "i.category = ?::category";
+      hasWhere = true;
     }
-
     if (dishName != null && !dishName.isBlank()) {
       if (hasWhere) {
-        sqlBuilder.append(" and ");
+        findIngSql += " and ";
       } else {
-        sqlBuilder.append(" where ");
-        hasWhere = true;
+        findIngSql += " where ";
       }
-      sqlBuilder.append(
-          "exists (select 1 from dish_ingredient di join dish d on di.id_dish = d.id where di.id_ingredient = i.id and d.name ilike ?)");
+      findIngSql += "d.name ilike ?";
     }
 
-    sqlBuilder.append(" order by i.id limit ? offset ?");
-
-    return sqlBuilder.toString();
+    findIngSql += " order by ing_id limit ? offset ?";
+    return findIngSql;
   }
 }

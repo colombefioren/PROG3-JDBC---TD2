@@ -75,8 +75,8 @@ public class Main {
 
     // i) List<Ingredient> createIngredient(...) - fromage and oignon
     System.out.println("\n===> List<Ingredient> createIngredient(...) | fromage and oignon <===");
-    Ingredient fromage = new Ingredient("Fromage",CategoryEnum.DAIRY,1200.0);
-    Ingredient oignon = new Ingredient("Oignon",CategoryEnum.VEGETABLE,500.0);
+    Ingredient fromage = new Ingredient("Fromage", CategoryEnum.DAIRY, 1200.0);
+    Ingredient oignon = new Ingredient("Oignon", CategoryEnum.VEGETABLE, 500.0);
     try {
       List<Ingredient> createdIngredientsI =
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(fromage, oignon)));
@@ -87,8 +87,8 @@ public class Main {
 
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
     System.out.println("\n===> List<Ingredient> createIngredient(...) | carotte and laitue <===");
-    Ingredient carotte = new Ingredient("Carotte",  CategoryEnum.VEGETABLE,2000.0);
-    Ingredient laitue = new Ingredient("Laitue",  CategoryEnum.VEGETABLE,2000.0);
+    Ingredient carotte = new Ingredient("Carotte", CategoryEnum.VEGETABLE, 2000.0);
+    Ingredient laitue = new Ingredient("Laitue", CategoryEnum.VEGETABLE, 2000.0);
     try {
       List<Ingredient> createdIngredientsJ =
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
