@@ -89,10 +89,6 @@ public class Dish {
     }
   }
 
-  public void setName(String name) {
-    this.name = name;
-  }
-
   public DishTypeEnum getDishType() {
     return dishType;
   }
@@ -101,10 +97,23 @@ public class Dish {
     this.dishType = dishType;
   }
 
+  public void setName(String name) {
+    this.name = name;
+  }
+
   public Double getDishCost() {
+    if (dishIngredients == null || dishIngredients.isEmpty()) {
+      return 0.0;
+    }
+
     double cost = 0.0;
     for (DishIngredient dishIngredient : dishIngredients) {
-      cost += dishIngredient.getIngredient().getPrice() * dishIngredient.getQuantityRequired();
+      if (dishIngredient != null
+          && dishIngredient.getIngredient() != null
+          && dishIngredient.getIngredient().getPrice() != null
+          && dishIngredient.getQuantityRequired() != null) {
+        cost += dishIngredient.getIngredient().getPrice() * dishIngredient.getQuantityRequired();
+      }
     }
     return cost;
   }

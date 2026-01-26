@@ -2,6 +2,7 @@ package com.revisionfour;
 
 import com.revisionfour.model.*;
 import com.revisionfour.repository.DataRetriever;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -23,9 +24,9 @@ public class Main {
     System.out.println("\n===> Dish findDishById(Integer id) | id = 999 <===");
     try {
       Dish dishB = dataRetriever.findDishById(999);
-      System.out.println("id=1 : " + dishB);
+      System.out.println("id=999 : " + dishB);
     } catch (RuntimeException e) {
-      System.out.println("Dish with id 999 not found. Error: " + e);
+      System.out.println("Dish with id 999 not found. Error: " + e.getMessage());
     }
 
     // c) List<Ingredient> findIngredients(int page, int size) - page=2 size=2
@@ -38,11 +39,11 @@ public class Main {
     System.out.println(
         "\n===> List<Ingredient> findIngredients(int page, int size) | page=3,size=5 <===");
     List<Ingredient> ingredientListD = dataRetriever.findIngredients(3, 5);
-    System.out.println("page=2,size=2 : " + ingredientListD);
+    System.out.println("page=3,size=5 : " + ingredientListD);
 
-    // e) List<Ingredient> findDishesByIngredientName(String IngredientName) - eur
+    // e) List<Dish> findDishesByIngredientName(String IngredientName) - eur
     System.out.println(
-        "\n===> List<Ingredient> findDishesByIngredientName(String IngredientName) | eur <===");
+        "\n===> List<Dish> findDishesByIngredientName(String IngredientName) | eur <===");
     List<Dish> dishesByIngredientNameE = dataRetriever.findDishesByIngredientName("eur");
     System.out.println("dishesByIngredientName : " + dishesByIngredientNameE);
 
@@ -79,7 +80,7 @@ public class Main {
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(fromage, oignon)));
       System.out.println("createdIngredients : " + createdIngredientsI);
     } catch (RuntimeException e) {
-      System.out.println("Error while creating ingredients : " + e);
+      System.out.println("Error while creating ingredients : " + e.getMessage());
     }
 
     // j) List<Ingredient> createIngredient(...) - carotte and laitue
@@ -91,52 +92,85 @@ public class Main {
           dataRetriever.createIngredients(new ArrayList<>(Arrays.asList(carotte, laitue)));
       System.out.println("createdIngredients : " + createdIngredientsJ);
     } catch (RuntimeException e) {
-      System.out.println("Error while creating ingredients : " + e);
+      System.out.println("Error while creating ingredients : " + e.getMessage());
+    }
 
-      // k) Dish saveDish(...) - soupe de légumes
-      System.out.println(
-          "\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
+    // k) Dish saveDish(...) - soupe de légumes
+    System.out.println(
+        "\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
+    try {
       Ingredient oignonIngredient = dataRetriever.findIngredientByName("Oignon");
-      DishIngredient oignonDishIng = new DishIngredient(null, oignonIngredient, 5.0, UnitType.PCS);
-      // dish is null since it will be set when attaching ingredient and same with the id (if not
-      // given the getnextserial value)
-      Dish newDish = new Dish("Soupe de légumes", DishTypeEnum.START, List.of(oignonDishIng));
+      if (oignonIngredient == null) {
+        System.out.println("Oignon ingredient not found");
+      } else {
+        DishIngredient oignonDishIng =
+            new DishIngredient(null, oignonIngredient, 5.0, UnitType.PCS);
+        Dish newDish = new Dish("Soupe de légumes", DishTypeEnum.START, List.of(oignonDishIng));
 
-      Dish savedDish = dataRetriever.saveDish(newDish);
-      System.out.println("Saved dish: " + savedDish);
+        Dish savedDish = dataRetriever.saveDish(newDish);
+        System.out.println("Saved dish: " + savedDish);
+      }
+    } catch (Exception e) {
+      System.out.println("Error saving dish: " + e.getMessage());
+    }
 
-      // l) Dish saveDish(...) - salade fraîche
-      System.out.println(
-          "\n===> Dish saveDish(...) | id=1 name=Salade fraîche dishType=START ingredients=Oignon, Laitue, Tomate, Fromage <===");
+    // l) Dish saveDish(...) - salade fraîche
+    System.out.println(
+        "\n===> Dish saveDish(...) | id=1 name=Salade fraîche dishType=START ingredients=Oignon, Laitue, Tomate, Fromage <===");
+    try {
       Ingredient laitueIngredient = dataRetriever.findIngredientByName("laitue");
       Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
       Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
-      DishIngredient laitueDishIng = new DishIngredient(null, laitueIngredient, 1.0, UnitType.PCS);
-      DishIngredient fromageDishIng =
-          new DishIngredient(null, fromageIngredient, 0.125, UnitType.KG);
-      DishIngredient tomateDishIng = new DishIngredient(null, tomateIngredient, 0.5, UnitType.KG);
-      DishIngredient oignonDishIng2 = new DishIngredient(null, oignonIngredient, 1.0, UnitType.PCS);
-      Dish newDishL =
-          new Dish(
-              1,
-              "Salade fraîche",
-              DishTypeEnum.START,
-              new ArrayList<>(
-                  Arrays.asList(laitueDishIng, fromageDishIng, tomateDishIng, oignonDishIng2)));
-      Dish savedDishL = dataRetriever.saveDish(newDishL);
-      System.out.println("savedDish : " + savedDishL);
+      Ingredient oignonIngredient = dataRetriever.findIngredientByName("oignon");
 
-      // m) Dish saveDish(...) - Salade de fromage
-      System.out.println(
-          "\n===> Dish saveDish(...) | id=1 name=Salade de fromage dishType=START ingredients=Fromage <===");
-      Dish newDishM =
-          new Dish(
-              1,
-              "Salade de fromage",
-              DishTypeEnum.START,
-              new ArrayList<>(Collections.singletonList(fromageDishIng)));
-      Dish savedDishM = dataRetriever.saveDish(newDishM);
-      System.out.println("savedDish : " + savedDishM);
+      if (laitueIngredient == null
+          || fromageIngredient == null
+          || tomateIngredient == null
+          || oignonIngredient == null) {
+        System.out.println("One or more ingredients not found");
+      } else {
+        DishIngredient laitueDishIng =
+            new DishIngredient(null, laitueIngredient, 1.0, UnitType.PCS);
+        DishIngredient fromageDishIng =
+            new DishIngredient(null, fromageIngredient, 0.125, UnitType.KG);
+        DishIngredient tomateDishIng = new DishIngredient(null, tomateIngredient, 0.5, UnitType.KG);
+        DishIngredient oignonDishIng2 =
+            new DishIngredient(null, oignonIngredient, 1.0, UnitType.PCS);
+        Dish newDishL =
+            new Dish(
+                1,
+                "Salade fraîche",
+                DishTypeEnum.START,
+                new ArrayList<>(
+                    Arrays.asList(laitueDishIng, fromageDishIng, tomateDishIng, oignonDishIng2)));
+        Dish savedDishL = dataRetriever.saveDish(newDishL);
+        System.out.println("savedDish : " + savedDishL);
+      }
+    } catch (Exception e) {
+      System.out.println("Error saving dish: " + e.getMessage());
+    }
+
+    // m) Dish saveDish(...) - Salade de fromage
+    System.out.println(
+        "\n===> Dish saveDish(...) | id=1 name=Salade de fromage dishType=START ingredients=Fromage <===");
+    try {
+      Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
+      if (fromageIngredient == null) {
+        System.out.println("Fromage ingredient not found");
+      } else {
+        DishIngredient fromageDishIng =
+            new DishIngredient(null, fromageIngredient, 0.125, UnitType.KG);
+        Dish newDishM =
+            new Dish(
+                1,
+                "Salade de fromage",
+                DishTypeEnum.START,
+                new ArrayList<>(Collections.singletonList(fromageDishIng)));
+        Dish savedDishM = dataRetriever.saveDish(newDishM);
+        System.out.println("savedDish : " + savedDishM);
+      }
+    } catch (Exception e) {
+      System.out.println("Error saving dish: " + e.getMessage());
     }
 
     // test after price attribute added in Dish entity
@@ -161,30 +195,47 @@ public class Main {
     try {
       System.out.println("Dish Gross Margin : " + dishT2.getGrossMargin());
     } catch (RuntimeException e) {
-      System.out.println(e);
+      System.out.println(e.getMessage());
     }
 
     System.out.println("\n===> Test with saveDish after price attribute added in Dish entity <===");
     System.out.println("\nnew Dish");
-    Ingredient laitueT3 = dataRetriever.findIngredientByName("laitue");
-    DishIngredient laitueT3DishIng = new DishIngredient(null, null, laitueT3, 1.0, UnitType.PCS);
-    List<DishIngredient> newDishIngT3 = new ArrayList<>(Collections.singletonList(laitueT3DishIng));
-    Dish newDishT3 = new Dish("Rabbit Cabbage", DishTypeEnum.START, newDishIngT3, 1200.00);
-    Dish savedDishT3 = dataRetriever.saveDish(newDishT3);
-    System.out.println("savedDish : " + savedDishT3);
+    try {
+      Ingredient laitueT3 = dataRetriever.findIngredientByName("laitue");
+      if (laitueT3 == null) {
+        System.out.println("Laitue ingredient not found");
+      } else {
+        DishIngredient laitueT3DishIng = new DishIngredient(null, laitueT3, 1.0, UnitType.PCS);
+        List<DishIngredient> newDishIngT3 =
+            new ArrayList<>(Collections.singletonList(laitueT3DishIng));
+        Dish newDishT3 = new Dish("Rabbit Cabbage", DishTypeEnum.START, newDishIngT3, 1200.00);
+        Dish savedDishT3 = dataRetriever.saveDish(newDishT3);
+        System.out.println("savedDish : " + savedDishT3);
+      }
+    } catch (Exception e) {
+      System.out.println("Error: " + e.getMessage());
+    }
 
     System.out.println("\nChange price");
-    Dish rizDish = dataRetriever.findDishById(3);
-    rizDish.setPrice(5000.00);
-    Dish newRizDish = dataRetriever.saveDish(rizDish);
-    System.out.println("newRizDish : " + newRizDish);
+    try {
+      Dish rizDish = dataRetriever.findDishById(3);
+      rizDish.setPrice(5000.00);
+      Dish newRizDish = dataRetriever.saveDish(rizDish);
+      System.out.println("newRizDish : " + newRizDish);
+    } catch (Exception e) {
+      System.out.println("Error: " + e.getMessage());
+    }
 
     dataRetriever.initializeDB();
 
     System.out.println("\n===> Test getGrossMargin after db normalization");
     List<Dish> allDishes = new ArrayList<>();
     for (int i = 5; i > 0; i--) {
-      allDishes.add(dataRetriever.findDishById(i));
+      try {
+        allDishes.add(dataRetriever.findDishById(i));
+      } catch (RuntimeException e) {
+        System.out.println("Dish with id " + i + " not found: " + e.getMessage());
+      }
     }
     for (Dish dish : allDishes) {
       try {
@@ -193,9 +244,28 @@ public class Main {
         System.out.println("Dish cost (ingredients) : " + dish.getDishCost());
         System.out.println("Gross Margin : " + dish.getGrossMargin());
       } catch (RuntimeException e) {
-        System.out.println(e);
-        ;
+        System.out.println(e.getMessage());
       }
     }
+
+    System.out.println("\n===> Stock::getQuantity <===");
+    List<Ingredient> allIngredients = new ArrayList<>();
+    for (int i = 5; i > 0; i--) {
+      try {
+        allIngredients.add(dataRetriever.findIngredientById(i));
+
+      } catch (RuntimeException e) {
+        System.out.println("Ingredient with id " + i + " not found: " + e.getMessage());
+      }
+    }
+
+    for (Ingredient ingredient : allIngredients) {
+      System.out.println("\nIngredient name : " + ingredient.getName());
+      System.out.println(
+          "Stock : " + ingredient.getStockValueAt(Instant.parse("2024-01-06T12:00:00Z")));
+    }
+
+    // initialize data at the end too cause why not
+    dataRetriever.initializeDB();
   }
 }

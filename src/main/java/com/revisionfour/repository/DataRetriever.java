@@ -3,6 +3,7 @@ package com.revisionfour.repository;
 import com.revisionfour.db.DBConnection;
 import com.revisionfour.model.*;
 import java.sql.*;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +55,21 @@ values (1, 1, 1, 0.20, 'KG'),
        (5, 4, 5, 0.20, 'KG');
 """;
 
+    String stockDataSql =
+"""
+insert into stock_movement (id_ingredient, quantity, unit, creation_datetime, type)
+values (1, 5.0, 'KG', '2024-01-05 08:00', 'IN'),
+       (1, 0.2, 'KG', '2024-01-06 12:00', 'OUT'),
+       (2, 4.0, 'KG', '2024-01-05 08:00', 'IN'),
+       (2, 0.15, 'KG', '2024-01-06 12:00', 'OUT'),
+       (3, 10.0, 'KG', '2024-01-04 09:00', 'IN'),
+       (3, 1.0, 'KG', '2024-01-06 13:00', 'OUT'),
+       (4, 3.0, 'KG', '2024-01-05 10:00', 'IN'),
+       (4, 0.3, 'KG', '2024-01-06 14:00', 'OUT'),
+       (5, 2.5, 'KG', '2024-01-05 10:00', 'IN'),
+       (5, 0.2, 'KG', '2024-01-06 14:00', 'OUT');
+""";
+
     String dishIngSqSql =
 """
 select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
@@ -69,6 +85,11 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
         select setval('ingredient_id_seq', (select max(id) from Ingredient));
     """;
 
+    String stockSqSql =
+"""
+select setval('stock_movement_id_seq', (select max(id) from stock_movement));
+
+""";
     Connection con = null;
     Statement stmt = null;
 
@@ -79,9 +100,11 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
       stmt.executeUpdate(dishDataSql);
       stmt.executeUpdate(ingredientDataSql);
       stmt.executeUpdate(dishIngSql);
+      stmt.executeUpdate(stockDataSql);
       stmt.executeQuery(dishSqSql);
       stmt.executeQuery(ingredientSqSql);
       stmt.executeQuery(dishIngSqSql);
+      stmt.executeQuery(stockSqSql);
     } catch (SQLException e) {
       throw new RuntimeException("Error while initializing db", e);
     } finally {
@@ -182,6 +205,15 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
         throw new RuntimeException("Failed to rollback", ex);
       }
       throw new RuntimeException("Failed to save new dish", e);
+    } catch (RuntimeException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException("Failed to rollback", ex);
+      }
+      throw new RuntimeException("Failed to save dish", e);
     } finally {
       try {
         if (con != null && !con.isClosed()) {
@@ -447,6 +479,121 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
     }
   }
 
+  @Override
+  public Ingredient saveIngredient(Ingredient toSave) {
+    if (toSave == null) {
+      throw new IllegalArgumentException("Ingredient cannot be null");
+    }
+    isValid(toSave);
+
+    String saveIngSql =
+"""
+    insert into ingredient (id, name, price, category)
+    values (?, ?, ?, ?::category)
+    on conflict (id) do update set name = excluded.name, price = excluded.price, category = excluded.category
+    returning id
+""";
+
+    Connection con = null;
+    PreparedStatement saveIngStmt = null;
+    ResultSet saveIngRs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      con.setAutoCommit(false);
+      saveIngStmt = con.prepareStatement(saveIngSql);
+      if (toSave.getId() == null) {
+        saveIngStmt.setInt(1, getNextSerialValue(con, "ingredient", "id"));
+      } else {
+        saveIngStmt.setInt(1, toSave.getId());
+      }
+      saveIngStmt.setString(2, toSave.getName());
+      saveIngStmt.setDouble(3, toSave.getPrice());
+      saveIngStmt.setString(4, toSave.getCategory().name());
+      saveIngRs = saveIngStmt.executeQuery();
+      saveIngRs.next();
+      con.commit();
+      Ingredient savedIngredient = findIngredientById(saveIngRs.getInt(1));
+
+      List<StockMovement> toSaveStockMovementList = toSave.getStockMovementList();
+      List<StockMovement> savedStockMovements = new ArrayList<>();
+      if (toSaveStockMovementList != null && !toSaveStockMovementList.isEmpty()) {
+        for (StockMovement stockMovement : toSaveStockMovementList) {
+          savedStockMovements.add(saveStockMovement(con, stockMovement, toSave.getId()));
+        }
+      }
+      savedIngredient.setStockMovementList(savedStockMovements);
+      return savedIngredient;
+    } catch (SQLException | RuntimeException e) {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.rollback();
+        }
+      } catch (SQLException ex) {
+        throw new RuntimeException("Failed to rollback", ex);
+      }
+      throw new RuntimeException("Error while saving ingredient", e);
+    } finally {
+      try {
+        if (con != null && !con.isClosed()) {
+          con.setAutoCommit(true);
+        }
+      } catch (SQLException e) {
+        System.out.println("Failed to set autoCommit to true");
+      }
+      dbConnection.attemptCloseDBConnection(saveIngRs, saveIngStmt, con);
+    }
+  }
+
+  private Ingredient saveIngredient(Connection con, Ingredient ingredient) {
+    if (ingredient == null) {
+      throw new IllegalArgumentException("Ingredient cannot be null");
+    }
+
+    isValid(ingredient);
+
+    String saveIngSql =
+        "insert into ingredient (id, name, price, category) values (?, ?, ?, ?::category) returning id";
+    PreparedStatement saveIngStmt = null;
+    ResultSet saveIngRs = null;
+    try {
+      saveIngStmt = con.prepareStatement(saveIngSql);
+      if (ingredient.getId() == null) {
+        saveIngStmt.setInt(1, getNextSerialValue(con, "ingredient", "id"));
+      } else {
+        saveIngStmt.setInt(1, ingredient.getId());
+      }
+      saveIngStmt.setString(2, ingredient.getName());
+
+      saveIngStmt.setDouble(3, ingredient.getPrice());
+      saveIngStmt.setString(4, ingredient.getCategory().name());
+      saveIngRs = saveIngStmt.executeQuery();
+      saveIngRs.next();
+      return mapIngredientFromResultSet(saveIngRs);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(saveIngRs, saveIngStmt);
+    }
+  }
+
+  private boolean verifyIngredientExistence(Connection con, Integer ingredientId) {
+    if (ingredientId == null) {
+      throw new IllegalArgumentException("Ingredient id cannot be null");
+    }
+
+    String verifyIngExistenceSql = "select 1 from ingredient where id = ?";
+    PreparedStatement verifyIngExistenceStmt = null;
+    ResultSet verifyIngExistenceRs = null;
+    try {
+      verifyIngExistenceStmt = con.prepareStatement(verifyIngExistenceSql);
+      verifyIngExistenceStmt.setInt(1, ingredientId);
+      verifyIngExistenceRs = verifyIngExistenceStmt.executeQuery();
+      return verifyIngExistenceRs.next();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   // DishIngredient methods
 
   @Override
@@ -525,7 +672,7 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
 
       return findDishIngredientById(saveDishIngRs.getInt(1));
 
-    } catch (SQLException e) {
+    } catch (SQLException | RuntimeException e) {
       try {
         if (con != null && !con.isClosed()) {
           con.rollback();
@@ -579,6 +726,114 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
     }
   }
 
+  // StockMovement methods
+
+  private StockMovement saveStockMovement(
+      Connection con, StockMovement stockMovement, Integer ingredientId) {
+    if (stockMovement == null || ingredientId == null) {
+      throw new IllegalArgumentException("StockMovement and ingredientId cannot be null");
+    }
+
+    String saveStockSql =
+"""
+    insert into stock_movement
+    (id, id_ingredient, quantity, type, unit, creation_datetime)
+    values (?, ?, ?, ?::stock_movement_type,?,?)
+    on conflict (id) do nothing
+    returning id
+""";
+
+    PreparedStatement saveStockStmt = null;
+    ResultSet saveStockRs = null;
+    try {
+      saveStockStmt = con.prepareStatement(saveStockSql);
+      if (stockMovement.getId() == null) {
+        saveStockStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
+      } else {
+        saveStockStmt.setInt(1, stockMovement.getId());
+      }
+      saveStockStmt.setInt(2, ingredientId);
+      saveStockStmt.setDouble(3, stockMovement.getValue().getQuantity());
+      saveStockStmt.setString(4, stockMovement.getType().name());
+      saveStockStmt.setString(5, stockMovement.getValue().getUnit().name());
+      if (stockMovement.getCreationDatetime() == null) {
+        saveStockStmt.setTimestamp(6, Timestamp.from(Instant.now()));
+      } else {
+        saveStockStmt.setTimestamp(6, Timestamp.from(stockMovement.getCreationDatetime()));
+      }
+      saveStockRs = saveStockStmt.executeQuery();
+      saveStockRs.next();
+      return findStockMovementById(saveStockRs.getInt(1));
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(saveStockRs, saveStockStmt);
+    }
+  }
+
+  public StockMovement findStockMovementById(Integer id) {
+    if (id == null) {
+      throw new IllegalArgumentException("id cannot be null");
+    }
+
+    String findStockSql =
+        """
+  select st.id as st_id, st.id_ingredient,
+  st.quantity as st_quantity, st.type as st_type,
+  st.unit as st_unit, st.creation_datetime
+  as st_creation_datetime from stock_movement st where id = ?
+  """;
+
+    Connection con = null;
+    PreparedStatement findStockStmt = null;
+    ResultSet findStockRs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      findStockStmt = con.prepareStatement(findStockSql);
+      findStockStmt.setInt(1, id);
+      findStockRs = findStockStmt.executeQuery();
+      if (!findStockRs.next()) {
+        throw new RuntimeException("StockMovement not found");
+      }
+      return mapStockMovementFromResultSet(findStockRs);
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(findStockRs, findStockStmt, con);
+    }
+  }
+
+  public List<StockMovement> findStockMovementsByIngredientId(Integer ingredientId) {
+    if (ingredientId == null) {
+      throw new IllegalArgumentException("ingredientId cannot be null");
+    }
+
+    String findStocksSql =
+"""
+    select st.id as st_id, st.id_ingredient, st.quantity as st_quantity, st.type as st_type, st.unit as st_unit, st.creation_datetime as st_creation_datetime from stock_movement st where id_ingredient = ? order by st_creation_datetime desc
+""";
+
+    Connection con = null;
+    PreparedStatement findStocksStmt = null;
+    ResultSet findStocksRs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      findStocksStmt = con.prepareStatement(findStocksSql);
+      findStocksStmt.setInt(1, ingredientId);
+      findStocksRs = findStocksStmt.executeQuery();
+      List<StockMovement> stockMovements = new ArrayList<>();
+      while (findStocksRs.next()) {
+        stockMovements.add(mapStockMovementFromResultSet(findStocksRs));
+      }
+      return stockMovements;
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(findStocksRs, findStocksStmt, con);
+    }
+  }
+
   // mappers
 
   private Ingredient mapIngredientFromResultSet(ResultSet ingRs) throws SQLException {
@@ -587,6 +842,7 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
     ingredient.setName(ingRs.getString("i_name"));
     ingredient.setPrice(ingRs.getDouble("i_price"));
     ingredient.setCategory(CategoryEnum.valueOf(ingRs.getString("i_category")));
+    ingredient.setStockMovementList(findStockMovementsByIngredientId(ingredient.getId()));
     return ingredient;
   }
 
@@ -616,6 +872,20 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
       }
     }
     return dish;
+  }
+
+  private StockMovement mapStockMovementFromResultSet(ResultSet stockMovementRs)
+      throws SQLException {
+    StockValue stockValue = new StockValue();
+    stockValue.setQuantity(stockMovementRs.getDouble("st_quantity"));
+    stockValue.setUnit(UnitType.valueOf(stockMovementRs.getString("st_unit")));
+    StockMovement stockMovement = new StockMovement();
+    stockMovement.setValue(stockValue);
+    stockMovement.setId(stockMovementRs.getInt("st_id"));
+    stockMovement.setType(MovementTypeEnum.valueOf(stockMovementRs.getString("st_type")));
+    stockMovement.setCreationDatetime(
+        stockMovementRs.getTimestamp("st_creation_datetime").toInstant());
+    return stockMovement;
   }
 
   // ingredient detach/attach
@@ -685,6 +955,21 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
       return;
     }
 
+    // we have to verify wether the ingredient are legit in the db before moving further
+    // if not, we create them
+    for (DishIngredient dishIngredient : dishIngredients) {
+      if (dishIngredient.getIngredient() == null) {
+        throw new IllegalArgumentException("Ingredient cannot be null");
+      }
+      if (dishIngredient.getIngredient().getId() == null) {
+        dishIngredient.setIngredient(saveIngredient(conn, dishIngredient.getIngredient()));
+      } else {
+        if (!verifyIngredientExistence(conn, dishIngredient.getIngredient().getId())) {
+          dishIngredient.setIngredient(saveIngredient(conn, dishIngredient.getIngredient()));
+        }
+      }
+    }
+
     String attachSql =
         """
                         insert into dish_ingredient (id, id_dish, id_ingredient, quantity_required, unit) values
@@ -711,7 +996,7 @@ select setval('dish_ingredient_id_seq',(select max(id) from dish_ingredient));
         // don't use batch since the insert happens only at the end, and thus the max id is not
         // updated
       }
-    } catch (SQLException e) {
+    } catch (SQLException | RuntimeException e) {
       throw new RuntimeException(e);
     } finally {
       dbConnection.attemptCloseDBConnection(ps);

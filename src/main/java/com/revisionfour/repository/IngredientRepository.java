@@ -15,4 +15,6 @@ public interface IngredientRepository {
   Ingredient findIngredientByName(String ingredientName);
 
   Ingredient findIngredientById(Integer id);
+
+  Ingredient saveIngredient(Ingredient toSave);
 }
