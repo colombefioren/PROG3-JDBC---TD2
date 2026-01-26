@@ -137,5 +137,44 @@ public class Main {
       Dish savedDishM = dataRetriever.saveDish(newDishM);
       System.out.println("savedDish : " + savedDishM);
     }
+
+    // test after price attribute added in Dish entity
+
+    // initialize data before the new tests
+    dataRetriever.initializeDB();
+
+    System.out.println(
+        "\n===> Test with findDishById after price attribute added in Dish entity <===");
+    Dish dishT1 = dataRetriever.findDishById(1);
+    System.out.println("Dish name : " + dishT1.getName());
+    System.out.println("Dish price : " + dishT1.getPrice());
+    System.out.println("Dish cost (ingredients) : " + dishT1.getDishCost());
+    System.out.println("Dish Gross Margin : " + dishT1.getGrossMargin());
+
+    System.out.println();
+
+    Dish dishT2 = dataRetriever.findDishById(3);
+    System.out.println("Dish name : " + dishT2.getName());
+    System.out.println("Dish price : " + dishT2.getPrice());
+    System.out.println("Dish cost (ingredients) : " + dishT2.getDishCost());
+    try {
+      System.out.println("Dish Gross Margin : " + dishT2.getGrossMargin());
+    } catch (RuntimeException e) {
+      System.out.println(e);
+    }
+
+    System.out.println("\n===> Test with saveDish after price attribute added in Dish entity <===");
+    System.out.println("\nnew Dish");
+    Ingredient laitueT3 = dataRetriever.findIngredientByName("laitue");
+    List<Ingredient> newDishT3Ing = new ArrayList<>(Collections.singletonList(laitueT3));
+    Dish newDishT3 = new Dish("Rabbit Cabbage", DishTypeEnum.START, newDishT3Ing, 1200.00);
+    Dish savedDishT3 = dataRetriever.saveDish(newDishT3);
+    System.out.println("savedDish : " + savedDishT3);
+
+    System.out.println("\nChange price");
+    Dish rizDish = dataRetriever.findDishById(3);
+    rizDish.setPrice(5000.00);
+    Dish newRizDish = dataRetriever.saveDish(rizDish);
+    System.out.println("newRizDish : " + newRizDish);
   }
 }

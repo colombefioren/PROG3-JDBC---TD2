@@ -36,12 +36,12 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String dishDataSql =
 """
-      insert into Dish (id, name, dish_type) values
-            (1, 'Salade fraîche', 'START'),
-            (2, 'Poulet grillé', 'MAIN'),
-            (3, 'Riz aux légumes', 'MAIN'),
-            (4, 'Gâteau au chocolat', 'DESSERT'),
-            (5, 'Salade de fruits', 'DESSERT');
+      insert into Dish (id, name, dish_type,selling_price) values
+            (1, 'Salade fraîche', 'START',2000),
+            (2, 'Poulet grillé', 'MAIN',6000),
+            (3, 'Riz aux légumes', 'MAIN',null),
+            (4, 'Gâteau au chocolat', 'DESSERT',null),
+            (5, 'Salade de fruits', 'DESSERT',null);
 """;
 
     String dishSqSql =
@@ -82,7 +82,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String dishSql =
 """
-    select d.id as d_id, d.name as d_name, d.dish_type from dish d where d.id = ?
+    select d.id as d_id, d.name as d_name, d.dish_type, d.selling_price as d_price from dish d where d.id = ?
 """;
 
     Connection con = null;
@@ -118,10 +118,10 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String saveDishSql =
         """
-                insert into dish (id, name, dish_type)
-                values (?, ?, ?::dish_type)
+                insert into dish (id, name, dish_type, selling_price)
+                values (?, ?, ?::dish_type, ?)
                 on conflict (id) do update
-                set name = excluded.name, dish_type = excluded.dish_type
+                set name = excluded.name, dish_type = excluded.dish_type, selling_price = excluded.selling_price
                 returning id
             """;
 
@@ -139,6 +139,11 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       }
       saveDishStmt.setString(2, dish.getName());
       saveDishStmt.setString(3, dish.getDishType().name());
+      if (dish.getPrice() == null) {
+        saveDishStmt.setNull(4, Types.DOUBLE);
+      } else {
+        saveDishStmt.setDouble(4, dish.getPrice());
+      }
       saveDishRs = saveDishStmt.executeQuery();
       saveDishRs.next();
       int dishId = saveDishRs.getInt(1);
@@ -178,7 +183,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
 
     String findDishSql =
         """
-                select d.id as d_id, d.name as d_name, d.dish_type from dish d join ingredient i on d.id = i.id_dish where i.name ilike ?
+                select d.id as d_id, d.name as d_name, d.dish_type, d.selling_price as d_price from dish d join ingredient i on d.id = i.id_dish where i.name ilike ?
             """;
 
     Connection con = null;
@@ -429,7 +434,7 @@ public class DataRetriever implements IngredientRepository, DishRepository {
       throw new IllegalArgumentException("id cannot be null");
     }
     String findIng =
-            """
+        """
                 select i.id as i_id, i.name as i_name, i.price as i_price, i.category as i_category from ingredient i where i.id = ?
             """;
 
@@ -475,6 +480,11 @@ public class DataRetriever implements IngredientRepository, DishRepository {
     dish.setName(dishRs.getString("d_name"));
     dish.setDishType(DishTypeEnum.valueOf(dishRs.getString("dish_type")));
     dish.setIngredients(findIngredientsByDishId(dishRs.getInt("d_id")));
+    if (hasColumn(dishRs, "d_price")) {
+      if (dishRs.getObject("d_price") != null) {
+        dish.setPrice(dishRs.getDouble("d_price"));
+      }
+    }
     return dish;
   }
 

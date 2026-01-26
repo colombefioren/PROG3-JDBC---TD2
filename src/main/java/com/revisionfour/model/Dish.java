@@ -9,6 +9,7 @@ public class Dish {
   private String name;
   private DishTypeEnum dishType;
   private List<Ingredient> ingredients;
+  private Double price;
 
   public Dish() {}
 
@@ -19,15 +20,17 @@ public class Dish {
     this.ingredients = ingredients;
   }
 
+  public Dish(String name, DishTypeEnum dishType, List<Ingredient> ingredients, Double price) {
+    this.name = name;
+    this.dishType = dishType;
+    this.ingredients = ingredients;
+    this.price = price;
+  }
+
   public Dish(String name, DishTypeEnum dishType, List<Ingredient> ingredients) {
     this.name = name;
     this.dishType = dishType;
     this.ingredients = ingredients;
-  }
-
-  public Dish(String name, DishTypeEnum dishType) {
-    this.name = name;
-    this.dishType = dishType;
   }
 
   public Integer getId() {
@@ -36,6 +39,14 @@ public class Dish {
 
   public void setId(Integer id) {
     this.id = id;
+  }
+
+  public Double getPrice() {
+    return price;
+  }
+
+  public void setPrice(Double price) {
+    this.price = price;
   }
 
   public String getName() {
@@ -73,6 +84,21 @@ public class Dish {
     }
   }
 
+  public Double getDishCost() {
+    Double cost = 0.0;
+    for (Ingredient ingredient : ingredients) {
+      cost += ingredient.getPrice();
+    }
+    return cost;
+  }
+
+  public Double getGrossMargin() {
+    if (this.price == null) {
+      throw new RuntimeException("Price is null so we cannot calculate gross margin");
+    }
+    return this.price - this.getDishCost();
+  }
+
   @Override
   public boolean equals(Object o) {
 
@@ -81,12 +107,13 @@ public class Dish {
     return Objects.equals(id, dish.id)
         && Objects.equals(name, dish.name)
         && dishType == dish.dishType
-        && Objects.equals(ingredients, dish.ingredients);
+        && Objects.equals(ingredients, dish.ingredients)
+        && Objects.equals(price, dish.price);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, dishType, ingredients);
+    return Objects.hash(id, name, dishType, ingredients, price);
   }
 
   @Override
@@ -101,6 +128,8 @@ public class Dish {
         + dishType
         + ", ingredients="
         + ingredients
+        + ", price="
+        + price
         + '}';
   }
 }
