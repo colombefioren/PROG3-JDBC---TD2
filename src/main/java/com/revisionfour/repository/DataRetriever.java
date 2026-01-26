@@ -511,7 +511,6 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
       saveIngStmt.setString(4, toSave.getCategory().name());
       saveIngRs = saveIngStmt.executeQuery();
       saveIngRs.next();
-      con.commit();
       Integer savedIngredientId = saveIngRs.getInt(1);
 
       List<StockMovement> toSaveStockMovementList = toSave.getStockMovementList();
