@@ -1,9 +1,6 @@
 package com.revisionfour;
 
-import com.revisionfour.model.CategoryEnum;
-import com.revisionfour.model.Dish;
-import com.revisionfour.model.DishTypeEnum;
-import com.revisionfour.model.Ingredient;
+import com.revisionfour.model.*;
 import com.revisionfour.repository.DataRetriever;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -99,14 +96,14 @@ public class Main {
       // k) Dish saveDish(...) - soupe de légumes
       System.out.println(
           "\n===> Dish saveDish(...) | name=Soupe de légumes dishType=START ingredients=Oignon <===");
-      Ingredient oignonIngredient = dataRetriever.findIngredientByName("oignon");
-      Dish newDishK =
-          new Dish(
-              "Soupe de légumes",
-              DishTypeEnum.START,
-              new ArrayList<>(Collections.singletonList(oignonIngredient)));
-      Dish savedDishK = dataRetriever.saveDish(newDishK);
-      System.out.println("savedDish : " + savedDishK);
+      Ingredient oignonIngredient = dataRetriever.findIngredientByName("Oignon");
+      DishIngredient oignonDishIng = new DishIngredient(null, oignonIngredient, 5.0, UnitType.PCS);
+      // dish is null since it will be set when attaching ingredient and same with the id (if not
+      // given the getnextserial value)
+      Dish newDish = new Dish("Soupe de légumes", DishTypeEnum.START, List.of(oignonDishIng));
+
+      Dish savedDish = dataRetriever.saveDish(newDish);
+      System.out.println("Saved dish: " + savedDish);
 
       // l) Dish saveDish(...) - salade fraîche
       System.out.println(
@@ -114,14 +111,18 @@ public class Main {
       Ingredient laitueIngredient = dataRetriever.findIngredientByName("laitue");
       Ingredient fromageIngredient = dataRetriever.findIngredientByName("fromage");
       Ingredient tomateIngredient = dataRetriever.findIngredientByName("tomate");
+      DishIngredient laitueDishIng = new DishIngredient(null, laitueIngredient, 1.0, UnitType.PCS);
+      DishIngredient fromageDishIng =
+          new DishIngredient(null, fromageIngredient, 0.125, UnitType.KG);
+      DishIngredient tomateDishIng = new DishIngredient(null, tomateIngredient, 0.5, UnitType.KG);
+      DishIngredient oignonDishIng2 = new DishIngredient(null, oignonIngredient, 1.0, UnitType.PCS);
       Dish newDishL =
           new Dish(
               1,
               "Salade fraîche",
               DishTypeEnum.START,
               new ArrayList<>(
-                  Arrays.asList(
-                      oignonIngredient, laitueIngredient, tomateIngredient, fromageIngredient)));
+                  Arrays.asList(laitueDishIng, fromageDishIng, tomateDishIng, oignonDishIng2)));
       Dish savedDishL = dataRetriever.saveDish(newDishL);
       System.out.println("savedDish : " + savedDishL);
 
@@ -133,7 +134,7 @@ public class Main {
               1,
               "Salade de fromage",
               DishTypeEnum.START,
-              new ArrayList<>(Collections.singletonList(fromageIngredient)));
+              new ArrayList<>(Collections.singletonList(fromageDishIng)));
       Dish savedDishM = dataRetriever.saveDish(newDishM);
       System.out.println("savedDish : " + savedDishM);
     }
@@ -166,8 +167,9 @@ public class Main {
     System.out.println("\n===> Test with saveDish after price attribute added in Dish entity <===");
     System.out.println("\nnew Dish");
     Ingredient laitueT3 = dataRetriever.findIngredientByName("laitue");
-    List<Ingredient> newDishT3Ing = new ArrayList<>(Collections.singletonList(laitueT3));
-    Dish newDishT3 = new Dish("Rabbit Cabbage", DishTypeEnum.START, newDishT3Ing, 1200.00);
+    DishIngredient laitueT3DishIng = new DishIngredient(null, null, laitueT3, 1.0, UnitType.PCS);
+    List<DishIngredient> newDishIngT3 = new ArrayList<>(Collections.singletonList(laitueT3DishIng));
+    Dish newDishT3 = new Dish("Rabbit Cabbage", DishTypeEnum.START, newDishIngT3, 1200.00);
     Dish savedDishT3 = dataRetriever.saveDish(newDishT3);
     System.out.println("savedDish : " + savedDishT3);
 
@@ -176,5 +178,24 @@ public class Main {
     rizDish.setPrice(5000.00);
     Dish newRizDish = dataRetriever.saveDish(rizDish);
     System.out.println("newRizDish : " + newRizDish);
+
+    dataRetriever.initializeDB();
+
+    System.out.println("\n===> Test getGrossMargin after db normalization");
+    List<Dish> allDishes = new ArrayList<>();
+    for (int i = 5; i > 0; i--) {
+      allDishes.add(dataRetriever.findDishById(i));
+    }
+    for (Dish dish : allDishes) {
+      try {
+        System.out.println("\nDish name : " + dish.getName());
+        System.out.println("Dish price : " + dish.getPrice());
+        System.out.println("Dish cost (ingredients) : " + dish.getDishCost());
+        System.out.println("Gross Margin : " + dish.getGrossMargin());
+      } catch (RuntimeException e) {
+        System.out.println(e);
+        ;
+      }
+    }
   }
 }

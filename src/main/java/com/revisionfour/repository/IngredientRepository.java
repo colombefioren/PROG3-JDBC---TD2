@@ -11,4 +11,8 @@ public interface IngredientRepository {
 
   List<Ingredient> findIngredientsByCriteria(
       String ingredientName, CategoryEnum category, String dishName, int page, int size);
+
+  Ingredient findIngredientByName(String ingredientName);
+
+  Ingredient findIngredientById(Integer id);
 }

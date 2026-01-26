@@ -7,17 +7,8 @@ public class Ingredient {
   private String name;
   private CategoryEnum category;
   private Double price;
-  private Dish dish;
 
   public Ingredient() {}
-
-  public Ingredient(Integer id, String name, CategoryEnum category, Double price, Dish dish) {
-    this.id = id;
-    this.name = name;
-    this.category = category;
-    this.price = price;
-    this.dish = dish;
-  }
 
   public Ingredient(Integer id, String name, CategoryEnum category, Double price) {
     this.id = id;
@@ -30,13 +21,6 @@ public class Ingredient {
     this.name = name;
     this.category = category;
     this.price = price;
-  }
-
-  public Ingredient(String name, CategoryEnum category, Double price, Dish dish) {
-    this.name = name;
-    this.category = category;
-    this.price = price;
-    this.dish = dish;
   }
 
   public Integer getId() {
@@ -71,18 +55,6 @@ public class Ingredient {
     this.category = category;
   }
 
-  public Dish getDish() {
-    return dish;
-  }
-
-  public void setDish(Dish dish) {
-    this.dish = dish;
-  }
-
-  public String getDishName() {
-    return this.dish == null ? null : this.dish.getName();
-  }
-
   @Override
   public boolean equals(Object o) {
     if (o == null || getClass() != o.getClass()) return false;
@@ -90,12 +62,12 @@ public class Ingredient {
     return Objects.equals(id, that.id)
         && Objects.equals(name, that.name)
         && category == that.category
-        && Objects.equals(dish, that.dish);
+        && Objects.equals(price, that.price);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, name, category, dish);
+    return Objects.hash(id, name, category, price);
   }
 
   @Override
@@ -108,8 +80,8 @@ public class Ingredient {
         + '\''
         + ", category="
         + category
-        + ", dish="
-        + getDishName()
+        + ", price="
+        + price
         + '}';
   }
 }
