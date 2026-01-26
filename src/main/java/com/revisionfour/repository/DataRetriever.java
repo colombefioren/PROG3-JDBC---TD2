@@ -512,17 +512,16 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
       saveIngRs = saveIngStmt.executeQuery();
       saveIngRs.next();
       con.commit();
-      Ingredient savedIngredient = findIngredientById(saveIngRs.getInt(1));
+      Integer savedIngredientId = saveIngRs.getInt(1);
 
       List<StockMovement> toSaveStockMovementList = toSave.getStockMovementList();
-      List<StockMovement> savedStockMovements = new ArrayList<>();
       if (toSaveStockMovementList != null && !toSaveStockMovementList.isEmpty()) {
         for (StockMovement stockMovement : toSaveStockMovementList) {
-          savedStockMovements.add(saveStockMovement(con, stockMovement, toSave.getId()));
+          saveStockMovement(con, stockMovement, savedIngredientId);
         }
       }
-      savedIngredient.setStockMovementList(savedStockMovements);
-      return savedIngredient;
+      con.commit();
+      return findIngredientById(savedIngredientId);
     } catch (SQLException | RuntimeException e) {
       try {
         if (con != null && !con.isClosed()) {
