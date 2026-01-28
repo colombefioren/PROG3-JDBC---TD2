@@ -746,7 +746,7 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
 
     StockValue stockValue = new StockValue();
     stockValue.setQuantity(rs.getDouble("quantity"));
-    stockValue.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+    stockValue.setUnit(UnitType.valueOf(rs.getString("unit")));
     movement.setValue(stockValue);
 
     return movement;
@@ -776,7 +776,7 @@ select setval('stock_movement_id_seq', (select max(id) from stock_movement));
     DishIngredient dishIngredient = new DishIngredient();
     dishIngredient.setId(rs.getInt("di_id"));
     dishIngredient.setQuantityRequired(rs.getDouble("quantity_required"));
-    dishIngredient.setUnit(UnitEnum.valueOf(rs.getString("unit")));
+    dishIngredient.setUnit(UnitType.valueOf(rs.getString("unit")));
 
     Ingredient ingredient = new Ingredient();
     ingredient.setId(rs.getInt("ing_id"));

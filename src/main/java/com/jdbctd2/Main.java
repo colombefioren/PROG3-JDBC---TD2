@@ -1,7 +1,7 @@
 package com.jdbctd2;
 
 import com.jdbctd2.model.*;
-import com.jdbctd2.model.UnitEnum;
+import com.jdbctd2.model.UnitType;
 import com.jdbctd2.repository.DataRetriever;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -105,7 +105,7 @@ public class Main {
       DishIngredient di = new DishIngredient();
       di.setIngredient(oignonIngredient);
       di.setQuantityRequired(0.5);
-      di.setUnit(UnitEnum.KG);
+      di.setUnit(UnitType.KG);
       dishIngredients.add(di);
       newDishK.setDishIngredients(dishIngredients);
     }
@@ -129,7 +129,7 @@ public class Main {
       DishIngredient di1 = new DishIngredient();
       di1.setIngredient(oignonIngredient);
       di1.setQuantityRequired(0.1);
-      di1.setUnit(UnitEnum.KG);
+      di1.setUnit(UnitType.KG);
       dishIngredientsL.add(di1);
     }
 
@@ -137,7 +137,7 @@ public class Main {
       DishIngredient di2 = new DishIngredient();
       di2.setIngredient(laitueIngredient);
       di2.setQuantityRequired(0.2);
-      di2.setUnit(UnitEnum.KG);
+      di2.setUnit(UnitType.KG);
       dishIngredientsL.add(di2);
     }
 
@@ -145,7 +145,7 @@ public class Main {
       DishIngredient di3 = new DishIngredient();
       di3.setIngredient(tomateIngredient);
       di3.setQuantityRequired(0.15);
-      di3.setUnit(UnitEnum.KG);
+      di3.setUnit(UnitType.KG);
       dishIngredientsL.add(di3);
     }
 
@@ -153,7 +153,7 @@ public class Main {
       DishIngredient di4 = new DishIngredient();
       di4.setIngredient(fromageIngredient);
       di4.setQuantityRequired(0.05);
-      di4.setUnit(UnitEnum.KG);
+      di4.setUnit(UnitType.KG);
       dishIngredientsL.add(di4);
     }
 
@@ -173,7 +173,7 @@ public class Main {
       DishIngredient di = new DishIngredient();
       di.setIngredient(fromageIngredient);
       di.setQuantityRequired(0.3);
-      di.setUnit(UnitEnum.KG);
+      di.setUnit(UnitType.KG);
       dishIngredientsM.add(di);
     }
 
@@ -227,7 +227,7 @@ public class Main {
       DishIngredient di1 = new DishIngredient();
       di1.setIngredient(laitueIngredient);
       di1.setQuantityRequired(0.3);
-      di1.setUnit(UnitEnum.KG);
+      di1.setUnit(UnitType.KG);
       dishIngredientsNew.add(di1);
     }
 
@@ -235,7 +235,7 @@ public class Main {
       DishIngredient di2 = new DishIngredient();
       di2.setIngredient(tomateIngredient);
       di2.setQuantityRequired(0.25);
-      di2.setUnit(UnitEnum.KG);
+      di2.setUnit(UnitType.KG);
       dishIngredientsNew.add(di2);
     }
 
@@ -258,7 +258,7 @@ public class Main {
       DishIngredient di = new DishIngredient();
       di.setIngredient(oignonIngredient);
       di.setQuantityRequired(0.2);
-      di.setUnit(UnitEnum.KG);
+      di.setUnit(UnitType.KG);
       dishIngredientsWithout.add(di);
     }
 

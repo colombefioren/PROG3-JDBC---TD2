@@ -19,6 +19,12 @@ public class StockMovement {
     this.creationDatetime = creationDatetime;
   }
 
+  public StockMovement(StockValue value, MovementTypeEnum type, Instant creationDatetime) {
+    this.value = value;
+    this.type = type;
+    this.creationDatetime = creationDatetime;
+  }
+
   public Integer getId() {
     return id;
   }
@@ -53,6 +59,7 @@ public class StockMovement {
 
   @Override
   public boolean equals(Object o) {
+
     if (o == null || getClass() != o.getClass()) return false;
     StockMovement that = (StockMovement) o;
     return Objects.equals(id, that.id)

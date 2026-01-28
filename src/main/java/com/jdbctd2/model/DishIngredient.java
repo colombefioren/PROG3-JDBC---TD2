@@ -7,19 +7,20 @@ public class DishIngredient {
   private Dish dish;
   private Ingredient ingredient;
   private Double quantityRequired;
-  private UnitEnum unit;
+  private UnitType unit;
 
   public DishIngredient() {}
 
   public DishIngredient(
-      Integer id, Dish dish, Ingredient ingredient, Double quantityRequired, UnitEnum unit) {
+      Integer id, Dish dish, Ingredient ingredient, Double quantityRequired, UnitType unit) {
+    this.id = id;
     this.dish = dish;
     this.ingredient = ingredient;
     this.quantityRequired = quantityRequired;
     this.unit = unit;
   }
 
-  public DishIngredient(Dish dish, Ingredient ingredient, Double quantityRequired, UnitEnum unit) {
+  public DishIngredient(Dish dish, Ingredient ingredient, Double quantityRequired, UnitType unit) {
     this.dish = dish;
     this.ingredient = ingredient;
     this.quantityRequired = quantityRequired;
@@ -55,29 +56,19 @@ public class DishIngredient {
   }
 
   public void setQuantityRequired(Double quantityRequired) {
-    if (quantityRequired == null || quantityRequired < 0)
-      throw new IllegalArgumentException("Quantity required cannot be negative");
     this.quantityRequired = quantityRequired;
   }
 
-  public UnitEnum getUnit() {
+  public UnitType getUnit() {
     return unit;
   }
 
-  public void setUnit(UnitEnum unit) {
+  public void setUnit(UnitType unit) {
     this.unit = unit;
-  }
-
-  public Double getCost() {
-    if (ingredient == null || ingredient.getPrice() == null || quantityRequired == null) {
-      return 0.0;
-    }
-    return ingredient.getPrice() * quantityRequired;
   }
 
   @Override
   public boolean equals(Object o) {
-
     if (o == null || getClass() != o.getClass()) return false;
     DishIngredient that = (DishIngredient) o;
     return Objects.equals(id, that.id)

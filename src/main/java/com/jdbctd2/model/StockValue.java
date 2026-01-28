@@ -4,9 +4,14 @@ import java.util.Objects;
 
 public class StockValue {
   private Double quantity;
-  private UnitEnum unit;
+  private UnitType unit;
 
   public StockValue() {}
+
+  public StockValue(Double quantity, UnitType unit) {
+    this.quantity = quantity;
+    this.unit = unit;
+  }
 
   public Double getQuantity() {
     return quantity;
@@ -16,16 +21,17 @@ public class StockValue {
     this.quantity = quantity;
   }
 
-  public UnitEnum getUnit() {
+  public UnitType getUnit() {
     return unit;
   }
 
-  public void setUnit(UnitEnum unit) {
+  public void setUnit(UnitType unit) {
     this.unit = unit;
   }
 
   @Override
   public boolean equals(Object o) {
+
     if (o == null || getClass() != o.getClass()) return false;
     StockValue that = (StockValue) o;
     return Objects.equals(quantity, that.quantity) && unit == that.unit;
