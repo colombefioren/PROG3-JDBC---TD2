@@ -2,16 +2,16 @@ package com.jdbctd2.model;
 
 public class UnitService {
 
-  public static double getIngredientInKG(DishIngredient dishIngredient) {
-    switch (dishIngredient.getIngredient().getName().toLowerCase()) {
+  public static double getIngredientInKG(Ingredient ingredient, Double quantity, UnitType unit) {
+    switch (ingredient.getName().toLowerCase()) {
       case "tomato":
         {
-          switch (dishIngredient.getUnit()) {
+          switch (unit) {
             case UnitType.KG -> {
-              return dishIngredient.getQuantityRequired();
+              return quantity;
             }
             case UnitType.PCS -> {
-              return dishIngredient.getQuantityRequired() / 10;
+              return quantity / 10;
             }
             case UnitType.L ->
                 throw new IllegalArgumentException("L is not a valid unit for tomato");
@@ -19,12 +19,12 @@ public class UnitService {
         }
       case "laitue":
         {
-          switch (dishIngredient.getUnit()) {
+          switch (unit) {
             case UnitType.PCS -> {
-              return dishIngredient.getQuantityRequired() / 2;
+              return quantity / 2;
             }
             case UnitType.KG -> {
-              return dishIngredient.getQuantityRequired();
+              return quantity;
             }
             case UnitType.L ->
                 throw new IllegalArgumentException("L is not a valid unit for laitue");
@@ -32,26 +32,26 @@ public class UnitService {
         }
       case "chocolat":
         {
-          switch (dishIngredient.getUnit()) {
+          switch (unit) {
             case UnitType.PCS -> {
-              return dishIngredient.getQuantityRequired() / 10;
+              return quantity / 10;
             }
             case UnitType.KG -> {
-              return dishIngredient.getQuantityRequired();
+              return quantity;
             }
             case UnitType.L -> {
-              return dishIngredient.getQuantityRequired() * 2.5;
+              return quantity * 2.5;
             }
           }
         }
       case "poulet":
         {
-          switch (dishIngredient.getUnit()) {
+          switch (unit) {
             case UnitType.PCS -> {
-              return dishIngredient.getQuantityRequired() / 8;
+              return quantity / 8;
             }
             case UnitType.KG -> {
-              return dishIngredient.getQuantityRequired();
+              return quantity;
             }
             case UnitType.L ->
                 throw new IllegalArgumentException("L is not a valid unit for laitue");
@@ -59,19 +59,19 @@ public class UnitService {
         }
       case "beurre":
         {
-          switch (dishIngredient.getUnit()) {
+          switch (unit) {
             case UnitType.PCS -> {
-              return dishIngredient.getQuantityRequired() / 4;
+              return quantity / 4;
             }
             case UnitType.KG -> {
-              return dishIngredient.getQuantityRequired();
+              return quantity;
             }
             case UnitType.L -> {
-              return dishIngredient.getQuantityRequired() * 5;
+              return quantity * 5;
             }
           }
         }
     }
-      return 0;
+    return 0;
   }
 }

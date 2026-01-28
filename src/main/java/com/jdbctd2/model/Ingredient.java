@@ -98,9 +98,13 @@ public class Ingredient {
     }
     for (StockMovement movement : movementsOfInstant) {
       if (movement.getType().equals(MovementTypeEnum.IN)) {
-        total += movement.getValue().getQuantity();
+        total +=
+            UnitService.getIngredientInKG(
+                this, movement.getValue().getQuantity(), movement.getValue().getUnit());
       } else if (movement.getType().equals(MovementTypeEnum.OUT)) {
-        total -= movement.getValue().getQuantity();
+        total -=
+            UnitService.getIngredientInKG(
+                this, movement.getValue().getQuantity(), movement.getValue().getUnit());
       }
     }
     if (movementsOfInstant.isEmpty()) {
