@@ -1,5 +1,6 @@
 package com.jdbctd2.model;
 
+import com.jdbctd2.model.enums.MovementTypeEnum;
 import java.time.Instant;
 import java.util.Objects;
 

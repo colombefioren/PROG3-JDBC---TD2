@@ -2,6 +2,10 @@ package com.jdbctd2.repository;
 
 import com.jdbctd2.db.DBConnection;
 import com.jdbctd2.model.*;
+import com.jdbctd2.model.enums.CategoryEnum;
+import com.jdbctd2.model.enums.DishTypeEnum;
+import com.jdbctd2.model.enums.MovementTypeEnum;
+import com.jdbctd2.model.enums.UnitType;
 import com.jdbctd2.util.UnitService;
 import java.sql.*;
 import java.time.Instant;
@@ -374,7 +378,7 @@ public class DataRetriever
 
   @Override
   public List<Ingredient> findIngredientsByCriteria(
-      String ingredientName, CategoryEnum category, String dishName, int page, int size) {
+          String ingredientName, CategoryEnum category, String dishName, int page, int size) {
 
     if (page <= 0 || size <= 0) {
       throw new IllegalArgumentException("Page and size must be valid values");

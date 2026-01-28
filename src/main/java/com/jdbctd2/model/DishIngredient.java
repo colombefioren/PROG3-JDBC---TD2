@@ -1,5 +1,6 @@
 package com.jdbctd2.model;
 
+import com.jdbctd2.model.enums.UnitType;
 import java.util.Objects;
 
 public class DishIngredient {

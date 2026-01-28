@@ -1,5 +1,8 @@
 package com.jdbctd2.model;
 
+import com.jdbctd2.model.enums.CategoryEnum;
+import com.jdbctd2.model.enums.MovementTypeEnum;
+import com.jdbctd2.model.enums.UnitType;
 import com.jdbctd2.util.UnitService;
 import java.time.Instant;
 import java.util.ArrayList;
