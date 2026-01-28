@@ -845,7 +845,7 @@ public class DataRetriever
     String updateStockSql =
         """
                     insert into stock_movement (id, id_ingredient, quantity, type, unit, creation_datetime)
-                    values (?, ?, ?, 'OUT'::movement_type, ?, ?)
+                    values (?, ?, ?, 'OUT'::movement_type, 'KG'::unit_type, ?)
                 """;
 
     PreparedStatement updateStockStmt = null;
@@ -857,13 +857,12 @@ public class DataRetriever
         Dish dish = findDishById(dishOrder.getDish().getId());
 
         for (DishIngredient dishIngredient : dish.getDishIngredients()) {
-          double quantityToRemove = dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
+          double quantityToRemove = UnitService.getIngredientInKG(dishIngredient.getIngredient(),dishIngredient.getQuantityRequired() * dishOrder.getQuantity(),dishIngredient.getUnit());
 
           updateStockStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
           updateStockStmt.setInt(2, dishIngredient.getIngredient().getId());
           updateStockStmt.setDouble(3, quantityToRemove);
-          updateStockStmt.setString(4, dishIngredient.getUnit().name());
-          updateStockStmt.setTimestamp(5, Timestamp.from(Instant.now()));
+          updateStockStmt.setTimestamp(4, Timestamp.from(Instant.now()));
 
           updateStockStmt.executeUpdate();
         }
