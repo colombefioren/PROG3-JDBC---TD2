@@ -1,13 +1,13 @@
-create database revisionfour;
+create database mini_dish_db;
 
-create user revisionfour_user with password  '123456';
+create user mini_dish_db_manager with password '123456';
 
-\c revisionfour;
+\c mini_dish_db;
 
-grant connect on database revisionfour to revisionfour_user;
+grant connect on database mini_dish_db to mini_dish_db_manager;
 
-grant create on schema public to revisionfour_user;
+grant create on schema public to mini_dish_db_manager;
 
-alter default privileges in schema public grant select, insert, update, delete on tables to revisionfour_user;
+alter default privileges in schema public grant select, insert, update, delete on tables to mini_dish_db_manager;
 
-alter default privileges in schema public grant usage, select, update on sequences to revisionfour_user;
+alter default privileges in schema public grant usage, select, update on sequences to mini_dish_db_manager;
