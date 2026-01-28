@@ -824,7 +824,11 @@ public class DataRetriever
                   .getId()); // finding the dish allows us to take the dish with its ingredients
       // stock movements
       for (DishIngredient dishIngredient : dish.getDishIngredients()) {
-        double required = dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
+        double required =
+            UnitService.getIngredientInKG(
+                dishIngredient.getIngredient(),
+                dishIngredient.getQuantityRequired() * dishOrder.getQuantity(),
+                dishIngredient.getUnit());
 
         Ingredient ingredient = dishIngredient.getIngredient();
 
@@ -845,7 +849,7 @@ public class DataRetriever
     String updateStockSql =
         """
                     insert into stock_movement (id, id_ingredient, quantity, type, unit, creation_datetime)
-                    values (?, ?, ?, 'OUT'::movement_type, 'KG'::unit_type, ?)
+                    values (?, ?, ?, 'OUT'::movement_type, ?::unit_type, ?)
                 """;
 
     PreparedStatement updateStockStmt = null;
@@ -857,12 +861,14 @@ public class DataRetriever
         Dish dish = findDishById(dishOrder.getDish().getId());
 
         for (DishIngredient dishIngredient : dish.getDishIngredients()) {
-          double quantityToRemove = UnitService.getIngredientInKG(dishIngredient.getIngredient(),dishIngredient.getQuantityRequired() * dishOrder.getQuantity(),dishIngredient.getUnit());
+          double quantityToRemove =
+                  dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
 
           updateStockStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
           updateStockStmt.setInt(2, dishIngredient.getIngredient().getId());
           updateStockStmt.setDouble(3, quantityToRemove);
-          updateStockStmt.setTimestamp(4, Timestamp.from(Instant.now()));
+          updateStockStmt.setString(4,dishIngredient.getUnit().name());
+          updateStockStmt.setTimestamp(5, Timestamp.from(Instant.now()));
 
           updateStockStmt.executeUpdate();
         }
