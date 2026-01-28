@@ -106,14 +106,13 @@ public class Ingredient {
       }
     }
     for (StockMovement movement : movementsOfInstant) {
+      double quantityInKG =
+          convertToKG(movement.getValue().getQuantity(), movement.getValue().getUnit());
+
       if (movement.getType().equals(MovementTypeEnum.IN)) {
-        total +=
-            UnitService.getIngredientInKG(
-                this, movement.getValue().getQuantity(), movement.getValue().getUnit());
+        total += quantityInKG;
       } else if (movement.getType().equals(MovementTypeEnum.OUT)) {
-        total -=
-            UnitService.getIngredientInKG(
-                this, movement.getValue().getQuantity(), movement.getValue().getUnit());
+        total -= quantityInKG;
       }
     }
     if (movementsOfInstant.isEmpty()) {
