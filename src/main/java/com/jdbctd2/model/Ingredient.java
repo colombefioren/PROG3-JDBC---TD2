@@ -110,7 +110,7 @@ public class Ingredient {
     if (movementsOfInstant.isEmpty()) {
       return new StockValue(0.0, UnitType.KG); // default unit
     }
-    return new StockValue(total, movementsOfInstant.getFirst().getValue().getUnit());
+    return new StockValue(total, UnitType.KG);
   }
 
   @Override

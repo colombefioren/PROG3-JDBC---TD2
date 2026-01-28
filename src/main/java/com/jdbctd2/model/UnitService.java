@@ -4,7 +4,7 @@ public class UnitService {
 
   public static double getIngredientInKG(Ingredient ingredient, Double quantity, UnitType unit) {
     switch (ingredient.getName().toLowerCase()) {
-      case "tomato":
+      case "tomate":
         {
           switch (unit) {
             case UnitType.KG -> {
@@ -40,7 +40,7 @@ public class UnitService {
               return quantity;
             }
             case UnitType.L -> {
-              return quantity * 2.5;
+              return quantity / 2.5;
             }
           }
         }
@@ -67,7 +67,7 @@ public class UnitService {
               return quantity;
             }
             case UnitType.L -> {
-              return quantity * 5;
+              return quantity / 5;
             }
           }
         }
