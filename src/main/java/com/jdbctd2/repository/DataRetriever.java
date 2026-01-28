@@ -721,7 +721,7 @@ public class DataRetriever
         """
                 insert into stock_movement
                 (id, id_ingredient, quantity, type, unit, creation_datetime)
-                values (?, ?, ?, ?::stock_movement_type,?,?)
+                values (?, ?, ?, ?::movement_type,?,?)
                 on conflict (id) do nothing
             """;
 
