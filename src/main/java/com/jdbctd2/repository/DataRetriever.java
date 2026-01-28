@@ -861,13 +861,12 @@ public class DataRetriever
         Dish dish = findDishById(dishOrder.getDish().getId());
 
         for (DishIngredient dishIngredient : dish.getDishIngredients()) {
-          double quantityToRemove =
-                  dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
+          double quantityToRemove = dishIngredient.getQuantityRequired() * dishOrder.getQuantity();
 
           updateStockStmt.setInt(1, getNextSerialValue(con, "stock_movement", "id"));
           updateStockStmt.setInt(2, dishIngredient.getIngredient().getId());
           updateStockStmt.setDouble(3, quantityToRemove);
-          updateStockStmt.setString(4,dishIngredient.getUnit().name());
+          updateStockStmt.setString(4, dishIngredient.getUnit().name());
           updateStockStmt.setTimestamp(5, Timestamp.from(Instant.now()));
 
           updateStockStmt.executeUpdate();
