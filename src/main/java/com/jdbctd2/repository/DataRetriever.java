@@ -7,7 +7,6 @@ import com.jdbctd2.model.enums.DishTypeEnum;
 import com.jdbctd2.model.enums.MovementTypeEnum;
 import com.jdbctd2.model.enums.UnitType;
 import com.jdbctd2.repository.interf.*;
-import com.jdbctd2.util.UnitService;
 import java.sql.*;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -830,13 +829,12 @@ public class DataRetriever
                   .getId()); // finding the dish allows us to take the dish with its ingredients
       // stock movements
       for (DishIngredient dishIngredient : dish.getDishIngredients()) {
+        Ingredient ingredient = dishIngredient.getIngredient();
+
         double required =
-            UnitService.getIngredientInKG(
-                dishIngredient.getIngredient(),
+            ingredient.convertToKG(
                 dishIngredient.getQuantityRequired() * dishOrder.getQuantity(),
                 dishIngredient.getUnit());
-
-        Ingredient ingredient = dishIngredient.getIngredient();
 
         StockValue currentStock = ingredient.getStockValueAt(Instant.now());
 
