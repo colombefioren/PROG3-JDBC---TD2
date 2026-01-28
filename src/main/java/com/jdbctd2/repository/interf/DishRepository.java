@@ -1,4 +1,4 @@
-package com.jdbctd2.repository;
+package com.jdbctd2.repository.interf;
 
 import com.jdbctd2.model.Dish;
 import java.util.List;
