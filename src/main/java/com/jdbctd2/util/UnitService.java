@@ -1,4 +1,7 @@
-package com.jdbctd2.model;
+package com.jdbctd2.util;
+
+import com.jdbctd2.model.Ingredient;
+import com.jdbctd2.model.UnitType;
 
 public class UnitService {
 
