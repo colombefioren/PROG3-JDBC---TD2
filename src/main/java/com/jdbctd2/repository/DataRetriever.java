@@ -896,15 +896,14 @@ public class DataRetriever
                 returning id
             """;
 
+    validateStockForOrder(orderToSave);
+
     Connection con = null;
     PreparedStatement orderStmt = null;
     ResultSet orderRs = null;
-
     try {
       con = dbConnection.getDBConnection();
       con.setAutoCommit(false);
-
-      validateStockForOrder(orderToSave);
 
       orderStmt = con.prepareStatement(orderSql);
       if (orderToSave.getId() == null) {
