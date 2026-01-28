@@ -15,6 +15,7 @@ public class Ingredient {
   private CategoryEnum category;
   private Double price;
   private List<StockMovement> stockMovementList;
+  private transient UnitConverter unitConverter;
 
   public Ingredient() {}
 
@@ -23,12 +24,14 @@ public class Ingredient {
     this.name = name;
     this.category = category;
     this.price = price;
+    this.unitConverter = UnitService.getConverter(name);
   }
 
   public Ingredient(String name, CategoryEnum category, Double price) {
     this.name = name;
     this.category = category;
     this.price = price;
+    this.unitConverter = UnitService.getConverter(name);
   }
 
   public Ingredient(
@@ -42,6 +45,7 @@ public class Ingredient {
     this.category = category;
     this.price = price;
     this.stockMovementList = stockMovementList;
+    this.unitConverter = UnitService.getConverter(name);
   }
 
   public Ingredient(
@@ -50,6 +54,7 @@ public class Ingredient {
     this.category = category;
     this.price = price;
     this.stockMovementList = stockMovementList;
+    this.unitConverter = UnitService.getConverter(name);
   }
 
   public Integer getId() {
@@ -115,6 +120,17 @@ public class Ingredient {
       return new StockValue(0.0, UnitType.KG); // default unit
     }
     return new StockValue(total, UnitType.KG);
+  }
+
+  public double convertToKG(double quantity, UnitType unit) {
+    if (unitConverter == null) {
+      unitConverter = UnitService.getConverter(name);
+    }
+
+    if (!unitConverter.supportsUnit(unit)) {
+      throw new IllegalArgumentException(unit + " is not a valid unit for " + this.name);
+    }
+    return unitConverter.convertToKG(quantity, unit);
   }
 
   @Override
