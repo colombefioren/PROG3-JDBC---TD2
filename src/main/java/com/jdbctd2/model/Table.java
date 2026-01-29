@@ -9,10 +9,6 @@ public class Table {
   private int number;
   private List<Order> orders;
 
-  public boolean isAvailableAt(Instant t) {
-    return false;
-  }
-
   public Table() {}
 
   public Table(Integer id, int number, List<Order> orders) {
@@ -43,6 +39,29 @@ public class Table {
 
   public void setOrders(List<Order> orders) {
     this.orders = orders;
+  }
+
+  public boolean isAvailableAt(Instant t) {
+    if (this.orders == null || this.orders.isEmpty()) {
+      return true;
+    }
+    for (Order order : this.orders) {
+      TableOrder tableOrder = order.getTableOrder();
+      if (tableOrder != null
+          && tableOrder.getTable() != null
+          && tableOrder.getTable().getId() != null
+          && tableOrder.getTable().getId().equals(this.id)) {
+        Instant arrival = tableOrder.getArrivalDatetime();
+        Instant departure = tableOrder.getDepartureDatetime();
+
+        if (arrival != null && !arrival.isAfter(t)) {
+          if (departure == null || departure.isAfter(t)) {
+            return false;
+          }
+        }
+      }
+    }
+    return true;
   }
 
   @Override
