@@ -42,21 +42,24 @@ public class Table {
   }
 
   public boolean isAvailableAt(Instant t) {
-    if (this.orders == null || this.orders.isEmpty()) {
+    if (orders == null || orders.isEmpty()) {
       return true;
     }
-    for (Order order : this.orders) {
+
+    for (Order order : orders) {
       TableOrder tableOrder = order.getTableOrder();
       if (tableOrder != null
           && tableOrder.getTable() != null
           && tableOrder.getTable().getId() != null
           && tableOrder.getTable().getId().equals(this.id)) {
+
         Instant arrival = tableOrder.getArrivalDatetime();
         Instant departure = tableOrder.getDepartureDatetime();
 
+        // Si le client est arrivé avant t et n'est pas encore parti
         if (arrival != null && !arrival.isAfter(t)) {
           if (departure == null || departure.isAfter(t)) {
-            return false;
+            return false; // Table occupée à cet instant
           }
         }
       }
