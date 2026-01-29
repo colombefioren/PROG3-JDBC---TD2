@@ -13,6 +13,7 @@ alter table "order"
 insert into "table" (id, number)
 values (1, 1),
        (2, 2),
-       (3, 3);
+       (3, 3),
+       (4, 4);
 
 select setval('table_id_seq', (select max(id) from "table"));
