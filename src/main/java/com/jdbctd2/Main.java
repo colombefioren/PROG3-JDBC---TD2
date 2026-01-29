@@ -10,23 +10,27 @@ public class Main {
   public static void main(String[] args) {
     DataRetriever dataRetriever = new DataRetriever();
 
-    dataRetriever.initializeDB();
+    System.out.println("\n=== create order ===");
 
-    System.out.println("\n===> Stock::getQuantity <===");
-    List<Ingredient> allIngredients = new ArrayList<>();
-    for (int i = 1; i <= 5; i++) {
-      try {
-        allIngredients.add(dataRetriever.findIngredientById(i));
+    try {
+      Order order = new Order();
+      order.setReference("ORD104");
 
-      } catch (RuntimeException e) {
-        System.out.println("Ingredient with id " + i + " not found: " + e.getMessage());
-      }
-    }
+      TableOrder tableOrder = new TableOrder();
+      Table table = dataRetriever.findById(4);
+      tableOrder.setTable(table);
+      tableOrder.setArrivalDatetime(Instant.now());
+      tableOrder.setDepartureDatetime(null);
 
-    for (Ingredient ingredient : allIngredients) {
-      System.out.println("\nIngredient name : " + ingredient.getName());
-      System.out.println(
-          "Stock : " + ingredient.getStockValueAt(Instant.parse("2024-01-06T12:00:00Z")));
+      order.setTableOrder(tableOrder);
+
+      DishOrder dishOrder = new DishOrder();
+      dishOrder.setDish(dataRetriever.findDishById(1));
+      dishOrder.setQuantity(1);
+      order.setDishOrders(new ArrayList<>(List.of(dishOrder)));
+      dataRetriever.saveOrder(order);
+    } catch (RuntimeException e) {
+      System.out.println(e.getMessage());
     }
   }
 }
