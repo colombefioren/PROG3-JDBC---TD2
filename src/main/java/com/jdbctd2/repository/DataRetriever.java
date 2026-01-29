@@ -21,7 +21,8 @@ public class DataRetriever
         DishIngredientRepository,
         StockMovementRepository,
         OrderRepository,
-        DishOrderRepository {
+        DishOrderRepository,
+        TableRepository {
   private final DBConnection dbConnection;
 
   public DataRetriever() {
@@ -1112,6 +1113,17 @@ public class DataRetriever
     return ingredient;
   }
 
+  private Table mapTableFromResultSet(ResultSet resultSet) throws SQLException {
+    Integer id = resultSet.getObject("t_id") == null ? null : resultSet.getInt("t_id");
+    Integer number = resultSet.getObject("t_number") == null ? null : resultSet.getInt("t_number");
+
+    if (id == null || number == null) {
+      return null;
+    }
+
+    return new Table(id, number, null); // we dont change orders here
+  }
+
   private DishIngredient mapDishIngredientFromResultSet(ResultSet dishIngRs) throws SQLException {
     DishIngredient dishIngredient = new DishIngredient();
     dishIngredient.setId(dishIngRs.getInt("di_id"));
@@ -1484,6 +1496,163 @@ public class DataRetriever
       }
     } catch (SQLException ex) {
       System.out.println("Failed to set autocommit to true");
+    }
+  }
+
+  // table methods
+  @Override
+  public Table findById(Integer id) {
+    String sql =
+        """
+    select t.id as t_id, t.number as t_number from "table" t where t.id = ?
+    """;
+
+    Connection con = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      statement = con.prepareStatement(sql);
+      statement.setInt(1, id);
+
+      rs = statement.executeQuery();
+      if (!rs.next()) {
+        throw new RuntimeException("Table not found");
+      }
+      return mapTableFromResultSet(rs);
+    } catch (SQLException e) {
+      throw new RuntimeException("Error finding table by id: " + id, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, statement, con);
+    }
+  }
+
+  @Override
+  public Table findByNumber(Integer number) {
+    String sql =
+        """
+    select t.id as t_id, t.number as t_number from "table" t where t.number = ?
+    """;
+
+    Connection con = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+
+    try {
+      con = dbConnection.getDBConnection();
+      statement = con.prepareStatement(sql);
+      statement.setInt(1, number);
+      rs = statement.executeQuery();
+      if (!rs.next()) {
+        throw new RuntimeException("Table not found");
+      }
+      return mapTableFromResultSet(rs);
+    } catch (SQLException e) {
+      throw new RuntimeException("Error finding table by number: " + number, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, statement, con);
+    }
+  }
+
+  @Override
+  public List<Table> findAll() {
+    String sql =
+        """
+    select t.id as t_id, t.number as t_number from "table" t order by t.number
+    """;
+    List<Table> tables = new ArrayList<>();
+
+    Connection con = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      statement = con.prepareStatement(sql);
+      rs = statement.executeQuery();
+      while (rs.next()) {
+        tables.add(mapTableFromResultSet(rs));
+      }
+      return tables;
+    } catch (SQLException e) {
+      throw new RuntimeException("Error finding all tables", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, statement, con);
+    }
+  }
+
+  @Override
+  public List<Integer> findAvailableTableNumbersAt(Instant instant) {
+    String sql =
+        """
+            select t.number
+            from "table" t
+            where not exists (
+                select 1 from "order" o
+                where o.id_table = t.id
+                and o.installation_datetime <= ?
+                and (o.departure_datetime is null or o.departure_datetime > ?)
+            )
+            order by t.number
+            """;
+
+    List<Integer> availableTableNumbers = new ArrayList<>();
+    Connection con = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      statement = con.prepareStatement(sql);
+      Timestamp timestamp = Timestamp.from(instant);
+      statement.setTimestamp(1, timestamp);
+      statement.setTimestamp(2, timestamp);
+
+      rs = statement.executeQuery();
+      while (rs.next()) {
+        availableTableNumbers.add(rs.getInt("number"));
+      }
+      return availableTableNumbers;
+    } catch (SQLException e) {
+      throw new RuntimeException("Error finding available table numbers at " + instant, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, statement, con);
+    }
+  }
+
+  @Override
+  public List<Table> findAvailableTablesAt(Instant instant) {
+    String sql =
+        """
+            select t.id as t_id, t.number as t_number
+            from "table" t
+            where not exists (
+                select 1 from "order" o
+                where o.id_table = t.id
+                and o.installation_datetime <= ?
+                and (o.departure_datetime is null or o.departure_datetime > ?)
+            )
+            order by t.number
+            """;
+
+    List<Table> availableTables = new ArrayList<>();
+    Connection con = null;
+    PreparedStatement statement = null;
+    ResultSet rs = null;
+    try {
+      con = dbConnection.getDBConnection();
+      statement = con.prepareStatement(sql);
+      Timestamp timestamp = Timestamp.from(instant);
+      statement.setTimestamp(1, timestamp);
+      statement.setTimestamp(2, timestamp);
+      rs = statement.executeQuery();
+      while (rs.next()) {
+        availableTables.add(mapTableFromResultSet(rs));
+      }
+      return availableTables;
+    } catch (SQLException e) {
+      throw new RuntimeException("Error finding available tables at " + instant, e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, statement, con);
     }
   }
 }
