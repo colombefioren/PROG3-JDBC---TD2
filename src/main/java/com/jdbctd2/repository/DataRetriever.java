@@ -34,8 +34,16 @@ public class DataRetriever
   public void initializeDB() {
     String eraseDataSql =
         """
-                    truncate dish_ingredient, dish, ingredient restart identity cascade;
+                    truncate dish_ingredient, dish, ingredient, "table" restart identity cascade;
             """;
+
+    String tableDataSql =
+"""
+insert into "table" (id, number)
+values (1, 1),
+       (2, 2),
+       (3, 3);
+""";
     String ingredientDataSql =
         """
                     insert into Ingredient (id, name, price, category) values
@@ -112,6 +120,7 @@ public class DataRetriever
       stmt.executeUpdate(ingredientDataSql);
       stmt.executeUpdate(dishIngSql);
       stmt.executeUpdate(stockDataSql);
+      stmt.executeUpdate(tableDataSql);
       stmt.executeQuery(dishSqSql);
       stmt.executeQuery(ingredientSqSql);
       stmt.executeQuery(dishIngSqSql);

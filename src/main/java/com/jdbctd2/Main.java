@@ -9,8 +9,8 @@ import java.util.List;
 public class Main {
   public static void main(String[] args) {
     DataRetriever dataRetriever = new DataRetriever();
-
     dataRetriever.initializeDB();
+
     System.out.println("\n=== Test de gestion des tables ===");
 
     try {
