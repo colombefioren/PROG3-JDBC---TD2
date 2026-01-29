@@ -9,6 +9,7 @@ public class Order {
   private String reference;
   private Instant creationDatetime;
   private List<DishOrder> dishOrders;
+  private TableOrder tableOrder;
 
   public Order() {}
 
@@ -23,6 +24,38 @@ public class Order {
     this.reference = reference;
     this.creationDatetime = creationDatetime;
     this.dishOrders = dishOrders;
+  }
+
+  public Order(
+      Integer id,
+      String reference,
+      Instant creationDatetime,
+      List<DishOrder> dishOrders,
+      TableOrder tableOrder) {
+    this.id = id;
+    this.reference = reference;
+    this.creationDatetime = creationDatetime;
+    this.dishOrders = dishOrders;
+    this.tableOrder = tableOrder;
+  }
+
+  public Order(
+      String reference,
+      Instant creationDatetime,
+      List<DishOrder> dishOrders,
+      TableOrder tableOrder) {
+    this.reference = reference;
+    this.creationDatetime = creationDatetime;
+    this.dishOrders = dishOrders;
+    this.tableOrder = tableOrder;
+  }
+
+  public TableOrder getTableOrder() {
+    return tableOrder;
+  }
+
+  public void setTableOrder(TableOrder tableOrder) {
+    this.tableOrder = tableOrder;
   }
 
   public Integer getId() {
@@ -64,12 +97,13 @@ public class Order {
     return Objects.equals(id, order.id)
         && Objects.equals(reference, order.reference)
         && Objects.equals(creationDatetime, order.creationDatetime)
-        && Objects.equals(dishOrders, order.dishOrders);
+        && Objects.equals(dishOrders, order.dishOrders)
+        && Objects.equals(tableOrder, order.tableOrder);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(id, reference, creationDatetime, dishOrders);
+    return Objects.hash(id, reference, creationDatetime, dishOrders, tableOrder);
   }
 
   @Override
@@ -84,6 +118,8 @@ public class Order {
         + creationDatetime
         + ", dishOrders="
         + dishOrders
+        + ", tableOrder="
+        + tableOrder
         + '}';
   }
 }
