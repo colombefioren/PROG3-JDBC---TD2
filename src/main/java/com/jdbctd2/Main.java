@@ -12,7 +12,7 @@ public class Main {
 
     dataRetriever.initializeDB();
 
-    System.out.println("\n===> Stock::getQuantity <===");
+    System.out.println("\n===> Stock::getQuantity | POO Approach <===");
     List<Ingredient> allIngredients = new ArrayList<>();
     for (int i = 1; i <= 5; i++) {
       try {
@@ -27,6 +27,16 @@ public class Main {
       System.out.println("\nIngredient name : " + ingredient.getName());
       System.out.println(
           "Stock : " + ingredient.getStockValueAt(Instant.parse("2024-01-06T12:00:00Z")));
+    }
+
+    System.out.println("\n===> Stock::getQuantity | DB SIDE PROCESSING Approacj <===");
+
+    for (Ingredient ingredient : allIngredients) {
+      System.out.println("\nIngredient name : " + ingredient.getName());
+      System.out.println(
+          "Stock : "
+              + dataRetriever.getStockValueAt(
+                  Instant.parse("2024-01-06T12:00:00Z"), ingredient.getId()));
     }
   }
 }

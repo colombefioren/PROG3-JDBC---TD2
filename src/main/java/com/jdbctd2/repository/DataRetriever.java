@@ -886,7 +886,123 @@ public class DataRetriever
 
   @Override
   public StockValue getStockValueAt(Instant t, Integer ingredientIndentifier) {
-    return null;
+
+    if (t == null) {
+      throw new IllegalArgumentException("Instant t cannot be null");
+    }
+
+    if (ingredientIndentifier == null) {
+      throw new IllegalArgumentException("Ingredient id cannot be null");
+    }
+
+    String getStockValueAtSql =
+"""
+select
+    'KG' as unit,
+    coalesce(sum(
+        case
+            when sm.type = 'IN' then
+                case
+                    when lower(i.name) = 'tomate' then
+                        case
+                            when sm.unit = 'KG' then sm.quantity
+                            when sm.unit = 'PCS' then sm.quantity / 10
+                            when sm.unit = 'L' then null
+                        end
+                    when lower(i.name) = 'laitue' then
+                        case
+                            when sm.unit = 'KG' then sm.quantity
+                            when sm.unit = 'PCS' then sm.quantity / 2
+                            when sm.unit = 'L' then null
+                        end
+                    when lower(i.name) = 'chocolat' then
+                        case
+                            when sm.unit = 'KG' then sm.quantity
+                            when sm.unit = 'PCS' then sm.quantity / 10
+                            when sm.unit = 'L' then sm.quantity / 2.5
+                        end
+                    when lower(i.name) = 'poulet' then
+                        case
+                            when sm.unit = 'KG' then sm.quantity
+                            when sm.unit = 'PCS' then sm.quantity / 8
+                            when sm.unit = 'L' then null
+                        end
+                    when lower(i.name) = 'beurre' then
+                        case
+                            when sm.unit = 'KG' then sm.quantity
+                            when sm.unit = 'PCS' then sm.quantity / 4
+                            when sm.unit = 'L' then sm.quantity / 5
+                        end
+                end
+            when sm.type = 'OUT' then
+                -1 * (
+                    case
+                        when lower(i.name) = 'tomate' then
+                            case
+                                when sm.unit = 'KG' then sm.quantity
+                                when sm.unit = 'PCS' then sm.quantity / 10
+                                when sm.unit = 'L' then null
+                            end
+                        when lower(i.name) = 'laitue' then
+                            case
+                                when sm.unit = 'KG' then sm.quantity
+                                when sm.unit = 'PCS' then sm.quantity / 2
+                                when sm.unit = 'L' then null
+                            end
+                        when lower(i.name) = 'chocolat' then
+                            case
+                                when sm.unit = 'KG' then sm.quantity
+                                when sm.unit = 'PCS' then sm.quantity / 10
+                                when sm.unit = 'L' then sm.quantity / 2.5
+                            end
+                        when lower(i.name) = 'poulet' then
+                            case
+                                when sm.unit = 'KG' then sm.quantity
+                                when sm.unit = 'PCS' then sm.quantity / 8
+                                when sm.unit = 'L' then null
+                            end
+                        when lower(i.name) = 'beurre' then
+                            case
+                                when sm.unit = 'KG' then sm.quantity
+                                when sm.unit = 'PCS' then sm.quantity / 4
+                                when sm.unit = 'L' then sm.quantity / 5
+                            end
+                    end
+                )
+        end
+    ), 0) as actual_quantity
+from stock_movement sm
+join ingredient i on sm.id_ingredient = i.id
+where sm.id_ingredient = ?
+and sm.creation_datetime <= ?
+group by sm.id_ingredient;
+""";
+
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = dbConnection.getDBConnection();
+      stmt = conn.prepareStatement(getStockValueAtSql);
+
+      stmt.setInt(1, ingredientIndentifier);
+
+      stmt.setTimestamp(2, Timestamp.from(t));
+
+      rs = stmt.executeQuery();
+      if (!rs.next()) {
+        throw new RuntimeException(
+            "No stock value found for ingredient " + ingredientIndentifier + " at " + t);
+      }
+
+      return new StockValue(
+          rs.getDouble("actual_quantity"), UnitType.valueOf(rs.getString("unit")));
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to get stock ", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, conn);
+    }
   }
 
   // order methods
