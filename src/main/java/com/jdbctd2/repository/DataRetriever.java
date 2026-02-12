@@ -279,7 +279,7 @@ group by di.id_dish;
       stmt = conn.prepareStatement(sql);
       stmt.setInt(1, dishId);
       rs = stmt.executeQuery();
-      if(!rs.next()){
+      if (!rs.next()) {
         throw new RuntimeException("Cannot retrieve dish cost");
       }
       return rs.getDouble("dish_cost");
@@ -314,10 +314,10 @@ group by d.id, d.selling_price;
       conn = dbConnection.getDBConnection();
       stmt = conn.prepareStatement(sql);
 
-      stmt.setInt(1,dishId);
+      stmt.setInt(1, dishId);
 
       rs = stmt.executeQuery();
-      if(!rs.next()){
+      if (!rs.next()) {
         throw new RuntimeException("Cannot retrieve dish cost");
       }
 

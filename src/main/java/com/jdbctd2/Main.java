@@ -29,7 +29,7 @@ public class Main {
           "Stock : " + ingredient.getStockValueAt(Instant.parse("2024-01-06T12:00:00Z")));
     }
 
-    System.out.println("\n===> Stock::getQuantity | DB SIDE PROCESSING Approacj <===");
+    System.out.println("\n===> Stock::getQuantity | DB SIDE PROCESSING Approach <===");
 
     for (Ingredient ingredient : allIngredients) {
       System.out.println("\nIngredient name : " + ingredient.getName());
@@ -39,7 +39,7 @@ public class Main {
                   Instant.parse("2024-01-06T12:00:00Z"), ingredient.getId()));
     }
 
-    System.out.println("\n===> Test getGrossMargin after db normalization");
+    System.out.println("\n===> Test getGrossMargin | POO Approach");
     List<Dish> allDishes = new ArrayList<>();
     for (int i = 5; i > 0; i--) {
       try {
@@ -54,6 +54,18 @@ public class Main {
         System.out.println("Dish price : " + dish.getPrice());
         System.out.println("Dish cost (ingredients) : " + dish.getDishCost());
         System.out.println("Gross Margin : " + dish.getGrossMargin());
+      } catch (RuntimeException e) {
+        System.out.println(e.getMessage());
+      }
+    }
+
+    System.out.println("\n===> Test getGrossMargin | DB SIDE PROCESSING Approach");
+    for (Dish dish : allDishes) {
+      try {
+        System.out.println("\nDish name : " + dish.getName());
+        System.out.println("Dish price : " + dish.getPrice());
+        System.out.println("Dish cost (ingredients) : " + dataRetriever.getDishCost(dish.getId()));
+        System.out.println("Gross Margin : " + dataRetriever.getGrossMargin(dish.getId()));
       } catch (RuntimeException e) {
         System.out.println(e.getMessage());
       }
