@@ -38,5 +38,25 @@ public class Main {
               + dataRetriever.getStockValueAt(
                   Instant.parse("2024-01-06T12:00:00Z"), ingredient.getId()));
     }
+
+    System.out.println("\n===> Test getGrossMargin after db normalization");
+    List<Dish> allDishes = new ArrayList<>();
+    for (int i = 5; i > 0; i--) {
+      try {
+        allDishes.add(dataRetriever.findDishById(i));
+      } catch (RuntimeException e) {
+        System.out.println("Dish with id " + i + " not found: " + e.getMessage());
+      }
+    }
+    for (Dish dish : allDishes) {
+      try {
+        System.out.println("\nDish name : " + dish.getName());
+        System.out.println("Dish price : " + dish.getPrice());
+        System.out.println("Dish cost (ingredients) : " + dish.getDishCost());
+        System.out.println("Gross Margin : " + dish.getGrossMargin());
+      } catch (RuntimeException e) {
+        System.out.println(e.getMessage());
+      }
+    }
   }
 }

@@ -9,4 +9,8 @@ public interface DishRepository {
   Dish saveDish(Dish dish);
 
   List<Dish> findDishesByIngredientName(String ingredientName);
+
+  Double getDishCost(Integer dishId);
+
+  Double getGrossMargin(Integer dishId);
 }

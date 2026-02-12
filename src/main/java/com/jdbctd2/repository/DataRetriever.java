@@ -253,6 +253,82 @@ public class DataRetriever
     }
   }
 
+  @Override
+  public Double getDishCost(Integer dishId) {
+
+    if (dishId == null) {
+      throw new IllegalArgumentException("Dish id cannot be null");
+    }
+    String sql =
+"""
+select
+    di.id_dish,
+    coalesce(sum(i.price * di.quantity_required), 0) as dish_cost
+from dish_ingredient di
+join ingredient i on di.id_ingredient = i.id
+where di.id_dish = ?
+group by di.id_dish;
+""";
+
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = dbConnection.getDBConnection();
+      stmt = conn.prepareStatement(sql);
+      stmt.setInt(1, dishId);
+      rs = stmt.executeQuery();
+      if(!rs.next()){
+        throw new RuntimeException("Cannot retrieve dish cost");
+      }
+      return rs.getDouble("dish_cost");
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, conn);
+    }
+  }
+
+  @Override
+  public Double getGrossMargin(Integer dishId) {
+
+    String sql =
+"""
+select
+    d.id,
+    d.selling_price,
+    coalesce(sum(i.price * di.quantity_required), 0) as dish_cost,
+    d.selling_price - coalesce(sum(i.price * di.quantity_required), 0) as gross_margin
+from dish d
+left join dish_ingredient di on d.id = di.id_dish
+left join ingredient i on di.id_ingredient = i.id
+where d.id = ?
+group by d.id, d.selling_price;
+""";
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = dbConnection.getDBConnection();
+      stmt = conn.prepareStatement(sql);
+
+      stmt.setInt(1,dishId);
+
+      rs = stmt.executeQuery();
+      if(!rs.next()){
+        throw new RuntimeException("Cannot retrieve dish cost");
+      }
+
+      return rs.getDouble("gross_margin");
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, conn);
+    }
+  }
+
   private void verifyDishExists(Connection con, Integer dishId) {
     if (dishId == null) {
       throw new IllegalArgumentException("Dish id cannot be null");
