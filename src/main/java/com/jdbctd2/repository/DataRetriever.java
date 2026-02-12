@@ -884,6 +884,11 @@ public class DataRetriever
     }
   }
 
+  @Override
+  public StockValue getStockValueAt(Instant t, Integer ingredientIndentifier) {
+    return null;
+  }
+
   // order methods
 
   @Override
