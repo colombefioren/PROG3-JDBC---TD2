@@ -1081,6 +1081,112 @@ group by sm.id_ingredient;
     }
   }
 
+  @Override
+  public List<StockPeriodValue> getStockValues(
+      String periodicity, Instant intervalleMin, Instant intervalleMax) {
+
+    if (periodicity == null || intervalleMin == null || intervalleMax == null) {
+      throw new IllegalArgumentException("Periodicity and interval dates cannot be null");
+    }
+
+    String getStockValuesSql =
+"""
+WITH daily_movement AS (
+    SELECT
+        sm.id_ingredient,
+        date_trunc(?, sm.creation_datetime)::date AS period,
+        SUM(
+            CASE
+                WHEN UPPER(sm.type) = 'IN' THEN
+                    CASE
+                        WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
+                        WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 2
+                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
+                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 2.5
+                        WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 8
+                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 4
+                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 5
+                    END
+                WHEN UPPER(sm.type) = 'OUT' THEN
+                    -1 * (
+                        CASE
+                            WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
+                            WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 2
+                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
+                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 2.5
+                            WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 8
+                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 4
+                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 5
+                        END
+                    )
+            END
+        ) AS variation
+    FROM stock_movement sm
+    JOIN ingredient i ON sm.id_ingredient = i.id
+    WHERE sm.creation_datetime BETWEEN ? AND ?
+    GROUP BY sm.id_ingredient, period
+),
+calendar AS (
+    SELECT generate_series(?::date, ?::date, INTERVAL '1 ' || ?)::date AS period
+),
+base AS (
+    SELECT i.id AS id_ingredient, c.period
+    FROM ingredient i
+    CROSS JOIN calendar c
+),
+evolution AS (
+    SELECT b.id_ingredient, b.period,
+           SUM(COALESCE(dm.variation, 0)) OVER (PARTITION BY b.id_ingredient ORDER BY b.period) AS stock_value
+    FROM base b
+    LEFT JOIN daily_movement dm ON dm.id_ingredient = b.id_ingredient AND dm.period = b.period
+)
+SELECT id_ingredient, period, stock_value
+FROM evolution
+ORDER BY id_ingredient, period;
+""";
+
+    Connection conn = null;
+    PreparedStatement stmt = null;
+    ResultSet rs = null;
+
+    try {
+      conn = dbConnection.getDBConnection();
+      stmt = conn.prepareStatement(getStockValuesSql);
+
+      stmt.setString(1, periodicity);
+      stmt.setTimestamp(2, Timestamp.from(intervalleMin));
+      stmt.setTimestamp(3, Timestamp.from(intervalleMax));
+      stmt.setTimestamp(4, Timestamp.from(intervalleMin));
+      stmt.setTimestamp(5, Timestamp.from(intervalleMax));
+      stmt.setString(6, periodicity);
+
+      rs = stmt.executeQuery();
+      List<StockPeriodValue> result = new ArrayList<>();
+      while (rs.next()) {
+        result.add(
+            new StockPeriodValue(
+                rs.getInt("id_ingredient"),
+                rs.getDate("period").toLocalDate(),
+                rs.getDouble("stock_value")));
+      }
+      return result;
+    } catch (SQLException e) {
+      throw new RuntimeException("Failed to get stock values", e);
+    } finally {
+      dbConnection.attemptCloseDBConnection(rs, stmt, conn);
+    }
+  }
+
   // order methods
 
   @Override
