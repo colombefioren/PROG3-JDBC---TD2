@@ -1089,6 +1089,14 @@ group by sm.id_ingredient;
       throw new IllegalArgumentException("Periodicity and interval dates cannot be null");
     }
 
+    String intervalStr =
+        switch (periodicity.toLowerCase()) {
+          case "day" -> "1 day";
+          case "week" -> "1 week";
+          case "month" -> "1 month";
+          default -> throw new IllegalArgumentException("Unsupported periodicity: " + periodicity);
+        };
+
     String getStockValuesSql =
 """
 WITH daily_movement AS (
@@ -1137,7 +1145,11 @@ WITH daily_movement AS (
     GROUP BY sm.id_ingredient, period
 ),
 calendar AS (
-    SELECT generate_series(?::date, ?::date, INTERVAL '1 ' || ?)::date AS period
+    SELECT generate_series(?::date, ?::date, INTERVAL '"""
+            + intervalStr
+            +
+"""
+                                             ')::date AS period
 ),
 base AS (
     SELECT i.id AS id_ingredient, c.period
@@ -1168,7 +1180,6 @@ ORDER BY id_ingredient, period;
       stmt.setTimestamp(3, Timestamp.from(intervalleMax));
       stmt.setTimestamp(4, Timestamp.from(intervalleMin));
       stmt.setTimestamp(5, Timestamp.from(intervalleMax));
-      stmt.setString(6, periodicity);
 
       rs = stmt.executeQuery();
       List<StockPeriodValue> result = new ArrayList<>();
