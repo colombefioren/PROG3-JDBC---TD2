@@ -1099,34 +1099,34 @@ WITH daily_movement AS (
             CASE
                 WHEN sm.type = 'IN' THEN
                     CASE
-                        WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                        WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
-                        WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                        WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 2
-                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
-                        WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 2.5
-                        WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                        WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 8
-                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 4
-                        WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 5
+                        WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'PCS' THEN sm.quantity / 10
+                        WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'PCS' THEN sm.quantity / 2
+                        WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'PCS' THEN sm.quantity / 10
+                        WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'L' THEN sm.quantity / 2.5
+                        WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'PCS' THEN sm.quantity / 8
+                        WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'KG' THEN sm.quantity
+                        WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'PCS' THEN sm.quantity / 4
+                        WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'L' THEN sm.quantity / 5
                     END
                 WHEN sm.type = 'OUT' THEN
                     -1 * (
                         CASE
-                            WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                            WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
-                            WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                            WHEN LOWER(i.name) = 'laitue' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 2
-                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
-                            WHEN LOWER(i.name) = 'chocolat' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 2.5
-                            WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                            WHEN LOWER(i.name) = 'poulet' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 8
-                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
-                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 4
-                            WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 5
+                            WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'PCS' THEN sm.quantity / 10
+                            WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'PCS' THEN sm.quantity / 2
+                            WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'PCS' THEN sm.quantity / 10
+                            WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'L' THEN sm.quantity / 2.5
+                            WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'PCS' THEN sm.quantity / 8
+                            WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'KG' THEN sm.quantity
+                            WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'PCS' THEN sm.quantity / 4
+                            WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'L' THEN sm.quantity / 5
                         END
                     )
             END
