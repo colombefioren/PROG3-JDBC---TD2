@@ -1097,7 +1097,7 @@ WITH daily_movement AS (
         date_trunc(?, sm.creation_datetime)::date AS period,
         SUM(
             CASE
-                WHEN UPPER(sm.type) = 'IN' THEN
+                WHEN sm.type = 'IN' THEN
                     CASE
                         WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity
                         WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 10
@@ -1112,7 +1112,7 @@ WITH daily_movement AS (
                         WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'PCS' THEN sm.quantity / 4
                         WHEN LOWER(i.name) = 'beurre' AND UPPER(sm.unit) = 'L' THEN sm.quantity / 5
                     END
-                WHEN UPPER(sm.type) = 'OUT' THEN
+                WHEN sm.type = 'OUT' THEN
                     -1 * (
                         CASE
                             WHEN LOWER(i.name) = 'tomate' AND UPPER(sm.unit) = 'KG' THEN sm.quantity

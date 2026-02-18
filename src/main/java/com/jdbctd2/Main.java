@@ -70,5 +70,24 @@ public class Main {
         System.out.println(e.getMessage());
       }
     }
+
+    System.out.println("\n===> Test getStockValues (periodic) | DB SIDE PROCESSING Approach <===");
+
+    String periodicity = "day";
+    Instant intervalleMin = Instant.parse("2024-01-01T00:00:00Z");
+    Instant intervalleMax = Instant.parse("2024-01-06T00:00:00Z");
+
+    List<StockPeriodValue> stockPeriodValues =
+        dataRetriever.getStockValues(periodicity, intervalleMin, intervalleMax);
+
+    for (StockPeriodValue spv : stockPeriodValues) {
+      System.out.println(
+          "Ingredient ID: "
+              + spv.getIngredientId()
+              + ", Period: "
+              + spv.getPeriod()
+              + ", Stock Value: "
+              + spv.getStockValue());
+    }
   }
 }
