@@ -1176,7 +1176,7 @@ ORDER BY id_ingredient, period;
         result.add(
             new StockPeriodValue(
                 rs.getInt("id_ingredient"),
-                rs.getDate("period").toLocalDate(),
+                rs.getTimestamp("period").toInstant(),
                 rs.getDouble("stock_value")));
       }
       return result;

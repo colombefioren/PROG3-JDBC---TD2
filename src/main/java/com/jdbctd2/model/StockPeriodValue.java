@@ -26,36 +26,41 @@ public class StockPeriodValue {
     return stockValue;
   }
 
-    public void setIngredientId(int ingredientId) {
-        this.ingredientId = ingredientId;
-    }
+  public void setIngredientId(int ingredientId) {
+    this.ingredientId = ingredientId;
+  }
 
-    public void setPeriod(Instant period) {
-        this.period = period;
-    }
+  public void setPeriod(Instant period) {
+    this.period = period;
+  }
 
-    public void setStockValue(double stockValue) {
-        this.stockValue = stockValue;
-    }
+  public void setStockValue(double stockValue) {
+    this.stockValue = stockValue;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (o == null || getClass() != o.getClass()) return false;
-        StockPeriodValue that = (StockPeriodValue) o;
-        return ingredientId == that.ingredientId && Double.compare(stockValue, that.stockValue) == 0 && Objects.equals(period, that.period);
-    }
+  @Override
+  public boolean equals(Object o) {
+    if (o == null || getClass() != o.getClass()) return false;
+    StockPeriodValue that = (StockPeriodValue) o;
+    return ingredientId == that.ingredientId
+        && Double.compare(stockValue, that.stockValue) == 0
+        && Objects.equals(period, that.period);
+  }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(ingredientId, period, stockValue);
-    }
+  @Override
+  public int hashCode() {
+    return Objects.hash(ingredientId, period, stockValue);
+  }
 
-    @Override
-    public String toString() {
-        return "StockPeriodValue{" +
-                "ingredientId=" + ingredientId +
-                ", period=" + period +
-                ", stockValue=" + stockValue +
-                '}';
-    }
+  @Override
+  public String toString() {
+    return "StockPeriodValue{"
+        + "ingredientId="
+        + ingredientId
+        + ", period="
+        + period
+        + ", stockValue="
+        + stockValue
+        + '}';
+  }
 }

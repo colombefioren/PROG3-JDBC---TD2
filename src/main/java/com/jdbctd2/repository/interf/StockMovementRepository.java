@@ -13,5 +13,6 @@ public interface StockMovementRepository {
 
   StockValue getStockValueAt(Instant t, Integer ingredientIdentifier);
 
-  List<StockPeriodValue> getStockValues(String peiodicity, Instant intervalleMin, Instant intervalleMax);
+  List<StockPeriodValue> getStockValues(
+      String peiodicity, Instant intervalleMin, Instant intervalleMax);
 }
