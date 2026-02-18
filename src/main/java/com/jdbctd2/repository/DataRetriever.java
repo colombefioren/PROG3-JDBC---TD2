@@ -9,6 +9,8 @@ import com.jdbctd2.model.enums.UnitType;
 import com.jdbctd2.repository.interf.*;
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -1141,7 +1143,7 @@ WITH daily_movement AS (
         ) AS variation
     FROM stock_movement sm
     JOIN ingredient i ON sm.id_ingredient = i.id
-    WHERE sm.creation_datetime BETWEEN ? AND ?
+    WHERE sm.creation_datetime <= ?
     GROUP BY sm.id_ingredient, period
 ),
 calendar AS (
@@ -1176,10 +1178,9 @@ ORDER BY id_ingredient, period;
       stmt = conn.prepareStatement(getStockValuesSql);
 
       stmt.setString(1, periodicity);
-      stmt.setTimestamp(2, Timestamp.from(intervalleMin));
-      stmt.setTimestamp(3, Timestamp.from(intervalleMax));
-      stmt.setTimestamp(4, Timestamp.from(intervalleMin));
-      stmt.setTimestamp(5, Timestamp.from(intervalleMax));
+      stmt.setTimestamp(2, Timestamp.from(intervalleMax));
+      stmt.setTimestamp(3, Timestamp.from(intervalleMin));
+      stmt.setTimestamp(4, Timestamp.from(intervalleMax));
 
       rs = stmt.executeQuery();
       List<StockPeriodValue> result = new ArrayList<>();
@@ -1187,7 +1188,7 @@ ORDER BY id_ingredient, period;
         result.add(
             new StockPeriodValue(
                 rs.getInt("id_ingredient"),
-                rs.getTimestamp("period").toInstant(),
+                rs.getObject("period", LocalDate.class).atStartOfDay(ZoneOffset.UTC).toInstant(),
                 rs.getDouble("stock_value")));
       }
       return result;

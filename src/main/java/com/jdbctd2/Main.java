@@ -73,7 +73,7 @@ public class Main {
 
     System.out.println("\n===> Test getStockValues (periodic) | DB SIDE PROCESSING Approach <===");
 
-    String periodicity = "day";
+    String periodicity = "week";
     Instant intervalleMin = Instant.parse("2024-01-01T00:00:00Z");
     Instant intervalleMax = Instant.parse("2024-01-06T00:00:00Z");
 
