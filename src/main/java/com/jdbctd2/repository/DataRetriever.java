@@ -1108,7 +1108,7 @@ public class DataRetriever
                     ingredient.id ingredient_id, ingredient.name ingredient_name, x.period, sum(coalesce(t.stock,0)) over (partition by ingredient.name order by x.period) stock
                 from ingredient
                 cross join
-                    (select to_char(generate_series(date_trunc(?,?),date_trunc(?,?)),'"""
+                    (select to_char(generate_series(date_trunc(?,?)::timestamp without time zone,date_trunc(?,?)::timestamp without time zone),'"""
 
                 + intervalStr + """
                 '::interval),'YY-MM-DD') period
@@ -1116,7 +1116,7 @@ public class DataRetriever
                         left join
                             (
                                 select
-                                    i.name ing_name, to_char(date_trunc(?, sm.creation_datetime), 'YY-MM-DD') period,
+                                    i.name ing_name, to_char(date_trunc(?, sm.creation_datetime::timestamp without time zone), 'YY-MM-DD') period,
                                        sum(
                                        case sm.type
                                            when 'IN' then
@@ -1154,7 +1154,7 @@ public class DataRetriever
                                           ) stock
                                 from ingredient i join stock_movement sm
                                                        on sm.id_ingredient = i.id
-                                where sm.creation_datetime < timestamp ? + interval '""" + intervalStr +
+                                where sm.creation_datetime::timestamp without timezone < timestamp ?::timestamp without time zone + interval '""" + intervalStr +
                 """
                                         '
                                         group by i.name, i.id, sm.creation_datetime, sm.type, sm.quantity, sm.unit
