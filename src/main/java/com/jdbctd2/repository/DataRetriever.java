@@ -1108,53 +1108,56 @@ public class DataRetriever
                     ingredient.id ingredient_id, ingredient.name ingredient_name, x.period, sum(coalesce(t.stock,0)) over (partition by ingredient.name order by x.period) stock
                 from ingredient
                 cross join
-                    (select to_char(generate_series(date_trunc(?,?)::timestamp without time zone,date_trunc(?,?)::timestamp without time zone),'"""
-
-                + intervalStr + """
-                '::interval),'YY-MM-DD') period
-                                    from stock_movement sm) x
-                        left join
-                            (
-                                select
-                                    i.name ing_name, to_char(date_trunc(?, sm.creation_datetime::timestamp without time zone), 'YY-MM-DD') period,
-                                       sum(
-                                       case sm.type
-                                           when 'IN' then
-                                               case
-                                                   when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
-                                                   when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
-                                                   when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
-                                                   when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
-                                                   when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
-                                                   when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
-                                                   when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
-                                                   when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
-                                                   when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
-                                                   when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
-                                                   when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
-                                                   when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
-                                                   end
-                                           when 'OUT' then
-                                               (case
-                                                    when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
-                                                    when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
-                                                    when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
-                                                    when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
-                                                    when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
-                                                    when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
-                                                    when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
-                                                    when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
-                                                    when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
-                                                    when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
-                                                    when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
-                                                    when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
-                                                   end) * -1
-                                           else 0
-                                           end
-                                          ) stock
-                                from ingredient i join stock_movement sm
-                                                       on sm.id_ingredient = i.id
-                                where sm.creation_datetime::timestamp without timezone < timestamp ?::timestamp without time zone + interval '""" + intervalStr +
+                              (select
+                  generate_series(
+                      date_trunc(?::text, ?::timestamp without time zone),
+                      date_trunc(?::text, ?::timestamp without time zone),
+                      interval '""" + intervalStr +
+                """
+                        ')period
+                                    )  x
+                              left join
+                                  (
+                                      select
+                                          i.name ing_name, date_trunc(?::text, sm.creation_datetime::timestamp without time zone) period,
+                                             sum(
+                                             case sm.type
+                                                 when 'IN' then
+                                                     case
+                                                         when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
+                                                         when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
+                                                         when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
+                                                         when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
+                                                         when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
+                                                         when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
+                                                         when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
+                                                         when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
+                                                         when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
+                                                         when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
+                                                         when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
+                                                         when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
+                                                         end
+                                                 when 'OUT' then
+                                                     (case
+                                                          when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
+                                                          when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
+                                                          when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
+                                                          when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
+                                                          when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
+                                                          when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
+                                                          when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
+                                                          when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
+                                                          when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
+                                                          when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
+                                                          when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
+                                                          when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
+                                                         end) * -1
+                                                 else 0
+                                                 end
+                                                ) stock
+                                      from ingredient i join stock_movement sm
+                                                             on sm.id_ingredient = i.id
+                                      where sm.creation_datetime::timestamp without time zone < ?::timestamp without time zone + interval '""" + intervalStr +
                 """
                                         '
                                         group by i.name, i.id, sm.creation_datetime, sm.type, sm.quantity, sm.unit
@@ -1398,6 +1401,7 @@ public class DataRetriever
         stockPeriodValue.setIngredientId(rs.getInt("ingredient_id"));
         stockPeriodValue.setIngredientName(rs.getString("ingredient_name"));
         stockPeriodValue.setPeriod(rs.getTimestamp("period").toInstant());
+        stockPeriodValue.setStockValue(rs.getDouble("stock"));
         return stockPeriodValue;
     }
 
