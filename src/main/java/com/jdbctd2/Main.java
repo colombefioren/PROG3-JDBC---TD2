@@ -6,8 +6,9 @@ import com.jdbctd2.model.StockPeriodValue;
 import com.jdbctd2.repository.DataRetriever;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -77,22 +78,46 @@ public class Main {
         System.out.println("\n===> Test getStockValues (periodic) | DB SIDE PROCESSING Approach <===");
 
         String periodicity = "day";
-        Instant intervalleMin = Instant.parse("2024-01-01T00:00:00Z");
-        Instant intervalleMax = Instant.parse("2024-01-06T00:00:00Z");
+        Instant intervalleMin = Instant.parse("2024-01-04T00:00:00Z");
+        Instant intervalleMax = Instant.parse("2024-01-07T00:00:00Z");
 
         List<StockPeriodValue> stockPeriodValues =
                 dataRetriever.getStockStats(periodicity, intervalleMin, intervalleMax);
 
+        DateTimeFormatter formatter =
+                DateTimeFormatter.ofPattern("yyyy-MM-dd")
+                        .withZone(ZoneOffset.UTC);
+
+        Set<String> allDates = new TreeSet<>();
+        Map<Long, Map<String, Double>> table = new LinkedHashMap<>();
+        Map<Long, String> ingredientNames = new LinkedHashMap<>();
+
         for (StockPeriodValue spv : stockPeriodValues) {
-            System.out.println(
-                    "Ingredient ID: "
-                            + spv.getIngredientId()
-                            + ", Name: " +
-                            spv.getIngredientName()
-                            + ", Period: "
-                            + spv.getPeriod()
-                            + ", Stock Value: "
-                            + spv.getStockValue());
+            String formattedDate = formatter.format(spv.getPeriod());
+            allDates.add(formattedDate);
+
+            table.computeIfAbsent((long) spv.getIngredientId(), k -> new LinkedHashMap<>())
+                    .put(formattedDate, spv.getStockValue());
+
+            ingredientNames.putIfAbsent((long) spv.getIngredientId(), spv.getIngredientName());
+        }
+
+        System.out.printf("%-4s%-12s", "ID", "Name");
+        for (String date : allDates) {
+            System.out.printf("%-13s", date);
+        }
+        System.out.println();
+
+        for (Long id : table.keySet()) {
+            System.out.printf("%-4d%-12s", id, ingredientNames.get(id));
+
+            Map<String, Double> stocks = table.get(id);
+            for (String date : allDates) {
+                Double value = stocks.getOrDefault(date, 0.0);
+                System.out.printf("%-13.1f", value);
+            }
+
+            System.out.println();
         }
     }
 }

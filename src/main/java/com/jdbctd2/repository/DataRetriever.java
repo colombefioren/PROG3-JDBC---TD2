@@ -10,6 +10,8 @@ import com.jdbctd2.repository.interf.*;
 
 import java.sql.*;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -1400,7 +1402,8 @@ public class DataRetriever
         StockPeriodValue stockPeriodValue = new StockPeriodValue();
         stockPeriodValue.setIngredientId(rs.getInt("ingredient_id"));
         stockPeriodValue.setIngredientName(rs.getString("ingredient_name"));
-        stockPeriodValue.setPeriod(rs.getTimestamp("period").toInstant());
+        LocalDateTime ldt = rs.getObject("period", LocalDateTime.class);
+        stockPeriodValue.setPeriod(ldt.toInstant(ZoneOffset.UTC));
         stockPeriodValue.setStockValue(rs.getDouble("stock"));
         return stockPeriodValue;
     }
