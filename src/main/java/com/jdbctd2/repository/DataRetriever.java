@@ -10,8 +10,6 @@ import com.jdbctd2.repository.interf.*;
 
 import java.sql.*;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -1107,7 +1105,7 @@ public class DataRetriever
         String sql = """
                 
                 select distinct on (ingredient.id,x.period)
-                    ingredient.name ingredient_name, x.period, sum(coalesce(t.stock,0)) over (partition by ingredient.name order by x.period) stock
+                    ingredient.id ingredient_id, ingredient.name ingredient_name, x.period, sum(coalesce(t.stock,0)) over (partition by ingredient.name order by x.period) stock
                 from ingredient
                 cross join
                     (select to_char(generate_series(date_trunc(?,?),date_trunc(?,?)),'"""
@@ -1180,14 +1178,13 @@ public class DataRetriever
             stmt.setTimestamp(4, Timestamp.from(intervalleMax));
             stmt.setString(5, periodicity);
             stmt.setTimestamp(6, Timestamp.from(intervalleMax));
-            stmt.executeQuery();
+            rs = stmt.executeQuery();
 
             List<StockPeriodValue> stockPeriodValues = new ArrayList<>();
-            while(rs.next()) {
-                stockPeriodValues.add(map)
+            while (rs.next()) {
+                stockPeriodValues.add(mapStockPeriodFromResultSet(rs));
             }
-
-            return null;
+            return stockPeriodValues;
         } catch (SQLException e) {
             throw new RuntimeException("Failed to get stats ", e);
         } finally {
@@ -1396,6 +1393,14 @@ public class DataRetriever
 
     // mappers
 
+    private StockPeriodValue mapStockPeriodFromResultSet(ResultSet rs) throws SQLException {
+        StockPeriodValue stockPeriodValue = new StockPeriodValue();
+        stockPeriodValue.setIngredientId(rs.getInt("ingredient_id"));
+        stockPeriodValue.setIngredientName(rs.getString("ingredient_name"));
+        stockPeriodValue.setPeriod(rs.getTimestamp("period").toInstant());
+        return stockPeriodValue;
+    }
+
     private DishOrder mapDishOrdersFromResultSet(ResultSet dishOrderRs) throws SQLException {
         DishOrder dishOrder = new DishOrder();
         dishOrder.setId(dishOrderRs.getInt("dor_id"));
@@ -1464,13 +1469,6 @@ public class DataRetriever
         stockMovement.setCreationDatetime(
                 stockMovementRs.getTimestamp("st_creation_datetime").toInstant());
         return stockMovement;
-    }
-
-    private StockPeriodValue mapStockPeriodValueFromResultSet(ResultSet stockPeriodValueRs)
-            throws SQLException {
-
-        StockPeriodValue stockPeriodValue = new StockPeriodValue();
-
     }
 
     // ingredient detach/attach
