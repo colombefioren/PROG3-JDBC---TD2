@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DataSourcePerFileMappings">
+    <file url="file://$APPLICATION_CONFIG_DIR$/consoles/db/5ecb4bf7-3f4c-4f26-9417-42fccb19d125/console.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/data.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/dish_price_schema.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/new_schema.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/new_schema_data.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/order_schema.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/stock_data.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/sql/stock_schema.sql" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/jdbctd2/repository/DataRetriever.java" value="5ecb4bf7-3f4c-4f26-9417-42fccb19d125" />
+  </component>
+</project>

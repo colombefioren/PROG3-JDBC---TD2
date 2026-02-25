@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="SqlDialectMappings">
+    <file url="file://$PROJECT_DIR$/sql/data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/dish_price_schema.sql" dialect="PostgreSQL" />
     <file url="file://$PROJECT_DIR$/sql/new_schema.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/new_schema_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/order_schema.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/schema.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/stock_data.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/sql/stock_schema.sql" dialect="PostgreSQL" />
+    <file url="file://$PROJECT_DIR$/src/main/java/com/jdbctd2/repository/DataRetriever.java" dialect="PostgreSQL" />
   </component>
 </project>

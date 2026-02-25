@@ -1085,13 +1085,14 @@ public class DataRetriever
     }
 
     @Override
-    public List<StockPeriodValue> getStockValues(
-            String periodicity, Instant intervalleMin, Instant intervalleMax) {
+    public List<StockPeriodValue> getStockStats(String periodicity, Instant intervalleMin, Instant intervalleMax) {
 
-        if (periodicity == null || intervalleMin == null || intervalleMax == null) {
-            throw new IllegalArgumentException("Periodicity and interval dates cannot be null");
+        if (periodicity == null ||
+                (!periodicity.equalsIgnoreCase("day") &&
+                        !periodicity.equalsIgnoreCase("week") &&
+                        !periodicity.equalsIgnoreCase("month"))) {
+            throw new IllegalArgumentException("Invalid periodicity");
         }
-
         String intervalStr =
                 switch (periodicity.toLowerCase()) {
                     case "day" -> "1 day";
@@ -1100,75 +1101,70 @@ public class DataRetriever
                     default -> throw new IllegalArgumentException("Unsupported periodicity: " + periodicity);
                 };
 
-        String getStockValuesSql =
+        if (intervalleMin == null || intervalleMax == null) {
+            throw new IllegalArgumentException("intervalleMin and intervalleMax cannot be null");
+        }
+        String sql = """
+                
+                select distinct on (ingredient.id,x.period)
+                    ingredient.name ingredient_name, x.period, sum(coalesce(t.stock,0)) over (partition by ingredient.name order by x.period) stock
+                from ingredient
+                cross join
+                    (select to_char(generate_series(date_trunc(?,?),date_trunc(?,?)),'"""
+
+                + intervalStr + """
+                '::interval),'YY-MM-DD') period
+                                    from stock_movement sm) x
+                        left join
+                            (
+                                select
+                                    i.name ing_name, to_char(date_trunc(?, sm.creation_datetime), 'YY-MM-DD') period,
+                                       sum(
+                                       case sm.type
+                                           when 'IN' then
+                                               case
+                                                   when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
+                                                   when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
+                                                   when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
+                                                   when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
+                                                   when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
+                                                   when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
+                                                   when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
+                                                   when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
+                                                   when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
+                                                   when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
+                                                   when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
+                                                   when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
+                                                   end
+                                           when 'OUT' then
+                                               (case
+                                                    when lower(i.name) = 'tomate' and sm.unit = 'KG' then sm.quantity
+                                                    when lower(i.name) = 'tomate' and sm.unit = 'PCS' then sm.quantity / 10
+                                                    when lower(i.name) = 'laitue' and sm.unit = 'KG' then sm.quantity
+                                                    when lower(i.name) = 'laitue' and sm.unit = 'PCS' then sm.quantity / 2
+                                                    when lower(i.name) = 'chocolat' and sm.unit = 'KG' then sm.quantity
+                                                    when lower(i.name) = 'chocolat' and sm.unit = 'PCS' then sm.quantity / 10
+                                                    when lower(i.name) = 'chocolat' and sm.unit = 'L' then sm.quantity / 2.5
+                                                    when lower(i.name) = 'poulet' and sm.unit = 'KG' then sm.quantity
+                                                    when lower(i.name) = 'poulet' and sm.unit = 'PCS' then sm.quantity / 8
+                                                    when lower(i.name) = 'beurre' and sm.unit = 'KG' then sm.quantity
+                                                    when lower(i.name) = 'beurre' and sm.unit = 'PCS' then sm.quantity / 4
+                                                    when lower(i.name) = 'beurre' and sm.unit = 'L' then sm.quantity / 5
+                                                   end) * -1
+                                           else 0
+                                           end
+                                          ) stock
+                                from ingredient i join stock_movement sm
+                                                       on sm.id_ingredient = i.id
+                                where sm.creation_datetime < timestamp ? + interval '""" + intervalStr +
                 """
-                        WITH daily_movement AS (
-                            SELECT
-                                sm.id_ingredient,
-                                date_trunc(?, sm.creation_datetime)::date AS period,
-                                SUM(
-                                    CASE
-                                        WHEN sm.type = 'IN' THEN
-                                            CASE
-                                                WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'KG' THEN sm.quantity
-                                                WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'PCS' THEN sm.quantity / 10
-                                                WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'KG' THEN sm.quantity
-                                                WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'PCS' THEN sm.quantity / 2
-                                                WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'KG' THEN sm.quantity
-                                                WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'PCS' THEN sm.quantity / 10
-                                                WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'L' THEN sm.quantity / 2.5
-                                                WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'KG' THEN sm.quantity
-                                                WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'PCS' THEN sm.quantity / 8
-                                                WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'KG' THEN sm.quantity
-                                                WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'PCS' THEN sm.quantity / 4
-                                                WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'L' THEN sm.quantity / 5
-                                            END
-                                        WHEN sm.type = 'OUT' THEN
-                                            -1 * (
-                                                CASE
-                                                    WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'KG' THEN sm.quantity
-                                                    WHEN LOWER(i.name) = 'tomate' AND sm.unit = 'PCS' THEN sm.quantity / 10
-                                                    WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'KG' THEN sm.quantity
-                                                    WHEN LOWER(i.name) = 'laitue' AND sm.unit = 'PCS' THEN sm.quantity / 2
-                                                    WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'KG' THEN sm.quantity
-                                                    WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'PCS' THEN sm.quantity / 10
-                                                    WHEN LOWER(i.name) = 'chocolat' AND sm.unit = 'L' THEN sm.quantity / 2.5
-                                                    WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'KG' THEN sm.quantity
-                                                    WHEN LOWER(i.name) = 'poulet' AND sm.unit = 'PCS' THEN sm.quantity / 8
-                                                    WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'KG' THEN sm.quantity
-                                                    WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'PCS' THEN sm.quantity / 4
-                                                    WHEN LOWER(i.name) = 'beurre' AND sm.unit = 'L' THEN sm.quantity / 5
-                                                END
-                                            )
-                                    END
-                                ) AS variation
-                            FROM stock_movement sm
-                            JOIN ingredient i ON sm.id_ingredient = i.id
-                            WHERE sm.creation_datetime <= ?
-                            GROUP BY sm.id_ingredient, period
-                        ),
-                        calendar AS (
-                            SELECT generate_series(?::date, ?::date, INTERVAL '"""
-                        + intervalStr
-                        +
-                        """
-                                                                             ')::date AS period
-                                ),
-                                base AS (
-                                    SELECT i.id AS id_ingredient, c.period
-                                    FROM ingredient i
-                                    CROSS JOIN calendar c
-                                ),
-                                evolution AS (
-                                    SELECT b.id_ingredient, b.period,
-                                           SUM(COALESCE(dm.variation, 0)) OVER (PARTITION BY b.id_ingredient ORDER BY b.period) AS stock_value
-                                    FROM base b
-                                    LEFT JOIN daily_movement dm ON dm.id_ingredient = b.id_ingredient AND dm.period = b.period
-                                )
-                                SELECT id_ingredient, period, stock_value
-                                FROM evolution
-                                ORDER BY id_ingredient, period;
-                                """;
+                                        '
+                                        group by i.name, i.id, sm.creation_datetime, sm.type, sm.quantity, sm.unit
+                                        order by i.id, period
+                                    ) t
+                                on t.ing_name = ingredient.name and t.period = x.period
+                                order by ingredient.id, period;
+                        """;
 
         Connection conn = null;
         PreparedStatement stmt = null;
@@ -1176,25 +1172,24 @@ public class DataRetriever
 
         try {
             conn = dbConnection.getDBConnection();
-            stmt = conn.prepareStatement(getStockValuesSql);
+            stmt = conn.prepareStatement(sql);
 
             stmt.setString(1, periodicity);
-            stmt.setTimestamp(2, Timestamp.from(intervalleMax));
-            stmt.setTimestamp(3, Timestamp.from(intervalleMin));
+            stmt.setTimestamp(2, Timestamp.from(intervalleMin));
+            stmt.setString(3, periodicity);
             stmt.setTimestamp(4, Timestamp.from(intervalleMax));
+            stmt.setString(5, periodicity);
+            stmt.setTimestamp(6, Timestamp.from(intervalleMax));
+            stmt.executeQuery();
 
-            rs = stmt.executeQuery();
-            List<StockPeriodValue> result = new ArrayList<>();
-            while (rs.next()) {
-                result.add(
-                        new StockPeriodValue(
-                                rs.getInt("id_ingredient"),
-                                rs.getObject("period", LocalDate.class).atStartOfDay(ZoneOffset.UTC).toInstant(),
-                                rs.getDouble("stock_value")));
+            List<StockPeriodValue> stockPeriodValues = new ArrayList<>();
+            while(rs.next()) {
+                stockPeriodValues.add(map)
             }
-            return result;
+
+            return null;
         } catch (SQLException e) {
-            throw new RuntimeException("Failed to get stock values", e);
+            throw new RuntimeException("Failed to get stats ", e);
         } finally {
             dbConnection.attemptCloseDBConnection(rs, stmt, conn);
         }
@@ -1469,6 +1464,13 @@ public class DataRetriever
         stockMovement.setCreationDatetime(
                 stockMovementRs.getTimestamp("st_creation_datetime").toInstant());
         return stockMovement;
+    }
+
+    private StockPeriodValue mapStockPeriodValueFromResultSet(ResultSet stockPeriodValueRs)
+            throws SQLException {
+
+        StockPeriodValue stockPeriodValue = new StockPeriodValue();
+
     }
 
     // ingredient detach/attach
